@@ -42,6 +42,9 @@ except ModuleNotFoundError:
 def ProcessWarnings():
     """ Process Warnings from dmidecode """
 
+    if not dmidecode_loaded:
+        return
+
     if not hasattr(dmidecode, 'get_warnings'):
         return
 
