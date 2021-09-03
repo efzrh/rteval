@@ -77,6 +77,27 @@ def cpuinfo():
             info[core] = {}
             continue
         info[core][key] = val
+
+    for (core, pcdict) in info.items():
+        if not 'model name' in pcdict:
+            # On Arm CPU implementer is present
+            # Construct the model_name from the following fields
+            if 'CPU implementer' in pcdict:
+                model_name = [pcdict.get('CPU implementer')]
+                model_name.append(pcdict.get('CPU architecture'))
+                model_name.append(pcdict.get('CPU variant'))
+                model_name.append(pcdict.get('CPU part'))
+                model_name.append(pcdict.get('CPU revision'))
+
+                # If a list item is None, remove it
+                model_name = [name for name in model_name if name]
+
+                # Convert the model_name list into a string
+                model_name = " ".join(model_name)
+                pcdict['model name'] = model_name
+            else:
+                pcdict['model name'] = 'Unknown'
+
     return info
 
 if __name__ == "__main__":
