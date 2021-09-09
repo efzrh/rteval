@@ -45,23 +45,33 @@ class KBuildJob:
         self.jobid = None
         self.node = node
         self.logger = logger
+        self.binder = None
         self.builddir = os.path.dirname(kdir)
         self.objdir = "%s/node%d" % (self.builddir, int(node))
+
         if not os.path.isdir(self.objdir):
             os.mkdir(self.objdir)
+
         if os.path.exists('/usr/bin/numactl') and not cpulist:
+            """ Use numactl """
             self.binder = 'numactl --cpunodebind %d' % int(self.node)
-        else:
-            self.binder = 'taskset -c %s' % compress_cpulist(cpulist)
-        if cpulist:
-            self.jobs = self.calc_jobs_per_cpu() * len(cpulist)
-        else:
             self.jobs = self.calc_jobs_per_cpu() * len(self.node)
+        elif cpulist:
+            """ Use taskset """
+            self.jobs = self.calc_jobs_per_cpu() * len(cpulist)
+            self.binder = 'taskset -c %s' % compress_cpulist(cpulist)
+        else:
+            """ Without numactl calculate number of jobs from the node """
+            self.jobs = self.calc_jobs_per_cpu() * len(self.node)
+
+        self.runcmd = f"make O={self.objdir} -C {self.kdir} -j{self.jobs}"
+        self.cleancmd = f"make O={self.objdir} -C {self.kdir} clean allmodconfig"
+        if self.binder:
+            self.runcmd = self.binder + " " + self.runcmd
+            self.cleancmd = self.binder + " " + self.cleancmd
+
         self.log(Log.DEBUG, "node %d: jobs == %d" % (int(node), self.jobs))
-        self.runcmd = "%s make O=%s -C %s -j%d" \
-                % (self.binder, self.objdir, self.kdir, self.jobs)
-        self.cleancmd = "%s make O=%s -C %s clean allmodconfig" \
-                % (self.binder, self.objdir, self.kdir)
+        self.log(Log.DEBUG, f"cleancmd = {self.cleancmd}")
         self.log(Log.DEBUG, "node%d kcompile command: %s" \
                 % (int(node), self.runcmd))
 
