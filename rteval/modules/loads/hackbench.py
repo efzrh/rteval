@@ -97,7 +97,6 @@ class Hackbench(CommandLineLoad):
                      '-l', str(self._cfg.setdefault('loops', '1000')),
                      '-s', str(self._cfg.setdefault('datasize', '1000'))
                      ]
-        self.__err_sleep = 5.0
 
     def _WorkloadBuild(self):
         # Nothing to build, so we're basically ready
