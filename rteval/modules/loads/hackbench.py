@@ -41,7 +41,6 @@ class Hackbench(CommandLineLoad):
     def __init__(self, config, logger):
         CommandLineLoad.__init__(self, "hackbench", config, logger)
 
-
     def _WorkloadSetup(self):
         'calculate arguments based on input parameters'
         (mem, units) = self.memsize
@@ -51,12 +50,10 @@ class Hackbench(CommandLineLoad):
             mem = mem / 1024.0
         elif units == 'TB':
             mem = mem * 1024
+
         ratio = float(mem) / float(self.num_cpus)
-        if ratio >= 0.75:
-            mult = float(self._cfg.setdefault('jobspercore', 2))
-        else:
+        if ratio < 0.75:
             self._log(Log.WARN, "Low memory system (%f GB/core)!" % ratio)
-            mult = 0
 
         sysTop = SysTopology()
         # get the number of nodes
