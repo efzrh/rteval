@@ -111,10 +111,10 @@ class SystemServices:
         rep_n = libxml2.newNode("Services")
         rep_n.newProp("init", self.__init)
 
-        for s in srvs:
+        for service, val in srvs.items():
             srv_n = libxml2.newNode("Service")
-            srv_n.newProp("state", srvs[s])
-            srv_n.addContent(s)
+            srv_n.newProp("state", val)
+            srv_n.addContent(service)
             rep_n.addChild(srv_n)
 
         return rep_n
