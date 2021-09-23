@@ -158,6 +158,9 @@ class Kcompile(CommandLineLoad):
                 "error removing builddir (%s) (ret=%d)" % (self.builddir, ret))
 
     def _WorkloadSetup(self):
+        if self._donotrun:
+            return
+
         # find our source tarball
         if 'tarball' in self._cfg:
             tarfile = os.path.join(self.srcdir, self._cfg.tarfile)
@@ -219,6 +222,9 @@ class Kcompile(CommandLineLoad):
 
 
     def _WorkloadBuild(self):
+        if self._donotrun:
+            return
+
         null = os.open("/dev/null", os.O_RDWR)
         if self._logging:
             out = self.open_logfile("kcompile-build.stdout")
@@ -293,6 +299,9 @@ class Kcompile(CommandLineLoad):
 
 
     def _WorkloadCleanup(self):
+        if self._donotrun:
+            return
+
         self._log(Log.DEBUG, "out of stopevent loop")
         for n in self.buildjobs:
             if self.buildjobs[n].jobid.poll() is None:

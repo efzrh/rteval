@@ -208,7 +208,7 @@ class RtEval(rtevalReport):
             report_interval = int(self.__rtevcfg.report_interval)
             if with_loads:
                 self._loadmods.Unleash()
-                nthreads = len(threading.enumerate())
+                nthreads = threading.active_count()
             else:
                 nthreads = None
             self.__logger.log(Log.INFO, "Waiting 30 seconds to let load modules settle down")
@@ -233,7 +233,7 @@ class RtEval(rtevalReport):
                                       "Measurement threads did not use the full time slot. Doing a controlled stop.")
 
                 if with_loads:
-                    if len(threading.enumerate()) < nthreads:
+                    if threading.active_count() < nthreads:
                         raise RuntimeError("load thread died!")
 
                 if not load_avg_checked:

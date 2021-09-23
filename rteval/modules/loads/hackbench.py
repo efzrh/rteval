@@ -42,6 +42,9 @@ class Hackbench(CommandLineLoad):
         CommandLineLoad.__init__(self, "hackbench", config, logger)
 
     def _WorkloadSetup(self):
+        if self._donotrun:
+            return
+
         'calculate arguments based on input parameters'
         (mem, units) = self.memsize
         if units == 'KB':

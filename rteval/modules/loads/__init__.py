@@ -106,7 +106,7 @@ class LoadModules(RtEvalModules):
         "Loads and imports all the configured modules"
 
         for m in modcfg:
-            # hope to eventually have different kinds but module is only on
+            # hope to eventually have different kinds but module is only one
             # for now (jcw)
             if m[1].lower() == 'module':
                 self._LoadModule(m[0])
