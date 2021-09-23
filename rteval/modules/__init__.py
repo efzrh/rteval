@@ -58,6 +58,7 @@ class rtevalModulePrototype(threading.Thread):
                          "stop": threading.Event(),
                          "finished": threading.Event()}
         self._donotrun = False
+        self._exclusive = False
         self.__timestamps = {}
         self.__sleeptime = 2.0
 
@@ -73,6 +74,16 @@ class rtevalModulePrototype(threading.Thread):
         if self._donotrun:
             return True
         return self.__ready
+
+
+    def is_exclusive(self):
+        """ Returns true if this workload should run alone """
+        return self._exclusive
+
+
+    def set_donotrun(self):
+        """ set a module's donotrun field to True """
+        self._donotrun = True
 
 
     def _setReady(self, state=True):
@@ -459,7 +470,17 @@ class RtEvalModules:
             raise rtevalRuntimeError("No %s modules configured" % self._module_type)
 
         self._logger.log(Log.INFO, "Preparing %s modules" % self._module_type)
+        exclusive = 0
         for (modname, mod) in self.__modules:
+            if mod.is_exclusive() and mod.WorkloadWillRun():
+                exclusive += 1
+        for (modname, mod) in self.__modules:
+            if exclusive >= 1:
+                if exclusive != 1:
+                    msg = f"More than one exclusive load: {exclusive}"
+                    raise RuntimeError(msg)
+                if not mod.is_exclusive() and mod.WorkloadWillRun():
+                    mod.set_donotrun()
             mod.start()
             if mod.WorkloadWillRun():
                 self._logger.log(Log.DEBUG, "\t - Started %s preparations" % modname)

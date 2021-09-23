@@ -27,6 +27,8 @@ class Stressng(CommandLineLoad):
             self._donotrun = False
         else:
             self._donotrun = True
+        """ When this module runs, other load modules should not """
+        self._exclusive = True
 
     def _WorkloadSetup(self):
         " Since there is nothing to build, we don't need to do anything here "
