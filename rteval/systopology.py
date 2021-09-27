@@ -29,8 +29,8 @@ import glob
 
 def sysread(path, obj):
     """ Helper function for reading system files """
-    fp = open(os.path.join(path, obj), "r")
-    return fp.readline().strip()
+    with open(os.path.join(path, obj), "r") as fp:
+        return fp.readline().strip()
 
 #
 # class to provide access to a list of cpus
