@@ -214,6 +214,10 @@ class Cyclictest(rtevalModulePrototype):
         else:
             self.__cpus = online_cpus()
 
+        # Sort the list of cpus to align with the order reported by
+        # cyclictest
+        self.__cpus.sort(key=int)
+
         # Get the cpuset from the environment
         cpuset = os.sched_getaffinity(0)
 
