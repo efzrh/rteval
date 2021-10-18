@@ -67,6 +67,9 @@ class RunData:
         retval += "mean:       %f\n" % self.__mean
         return retval
 
+    def get_max(self):
+        return self.__max
+
     def update_max(self, value):
         if value > self.__max:
             self.__max = value
@@ -415,6 +418,13 @@ class Cyclictest(rtevalModulePrototype):
         # Only add the <abort_report/> node if an abortion happened
         if abrt:
             rep_n.addChild(abrt_n)
+
+        # Let the user know if max latency overshot the number of buckets
+        if self.__cyclicdata["system"].get_max() > self.__buckets:
+            self._log(Log.ERR, "Max latency(%dus) exceeded histogram range(%dus). Skipping statistics" %
+                      (self.__cyclicdata["system"].get_max(), self.__buckets))
+            self._log(Log.ERR, "Increase number of buckets to avoid lost samples")
+            return rep_n
 
         rep_n.addChild(self.__cyclicdata["system"].MakeReport())
         for thr in self.__cpus:
