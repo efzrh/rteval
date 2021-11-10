@@ -142,7 +142,7 @@ class Kcompile(CommandLineLoad):
         try:
             subprocess.call(tarargs)
         except:
-            self._log(Log.DEBUG, "untar'ing kernel self.source failed!")
+            self._log(Log.DEBUG, "untarring kernel self.source failed!")
             sys.exit(-1)
 
     def _remove_build_dirs(self):
