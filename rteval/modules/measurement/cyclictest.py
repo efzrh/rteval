@@ -295,9 +295,12 @@ class Cyclictest(rtevalModulePrototype):
         if 'threads' in self.__cfg and self.__cfg.threads:
             self.__cmd.append("-t%d" % int(self.__cfg.threads))
 
+        # Should have either breaktrace or threshold, not both
         if 'breaktrace' in self.__cfg and self.__cfg.breaktrace:
             self.__cmd.append("-b%d" % int(self.__cfg.breaktrace))
             self.__cmd.append("--tracemark")
+        elif 'threshold' in self.__cfg and self.__cfg.threshold:
+            self.__cmd.append("-b%d" % int(self.__cfg.threshold))
 
         # Buffer for cyclictest data written to stdout
         self.__cyclicoutput = tempfile.SpooledTemporaryFile(mode='w+b')
@@ -411,7 +414,7 @@ class Cyclictest(rtevalModulePrototype):
         if self.__breaktraceval:
             abrt_n.newProp('reason', 'breaktrace')
             btv_n = abrt_n.newChild(None, 'breaktrace', None)
-            btv_n.newProp('latency_threshold', str(self.__cfg.breaktrace))
+            btv_n.newProp('latency_threshold', str(self.__cfg.breaktrace) if self.__cfg.breaktrace else str(self.__cfg.threshold))
             btv_n.newProp('measured_latency', str(self.__breaktraceval))
             abrt = True
 
@@ -454,7 +457,10 @@ def ModuleParameters():
                          "metavar": "PRIO"},
             "breaktrace": {"descr": "Send a break trace command when latency > USEC",
                            "default": None,
-                           "metavar": "USEC"}
+                           "metavar": "USEC"},
+            "threshold": {"descr": "Exit rteval if latency > USEC",
+                          "default": None,
+                          "metavar": "USEC"}
             }
 
 
