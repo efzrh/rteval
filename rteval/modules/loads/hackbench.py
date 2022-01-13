@@ -39,6 +39,7 @@ from rteval.systopology import SysTopology
 
 class Hackbench(CommandLineLoad):
     def __init__(self, config, logger):
+        self.__cfg = config
         CommandLineLoad.__init__(self, "hackbench", config, logger)
 
     def _WorkloadSetup(self):
@@ -56,7 +57,11 @@ class Hackbench(CommandLineLoad):
 
         ratio = float(mem) / float(self.num_cpus)
         if ratio < 0.75:
-            self._log(Log.WARN, "Low memory system (%f GB/core)!" % ratio)
+            if self.__cfg.runlowmem:
+                self._log(Log.WARN, "Low memory system (%f GB/core)!" % ratio)
+            else:
+                self._log(Log.WARN, "Low memory system (%f GB/core)! Not running hackbench" % ratio)
+                self._donotrun = True
 
         sysTop = SysTopology()
         # get the number of nodes
@@ -198,6 +203,9 @@ def ModuleParameters():
     return {"jobspercore": {"descr": "Number of working threads per CPU core",
                             "default": 5,
                             "metavar": "NUM"},
+            "runlowmem": {"descr": "Run hackbench on machines where low memory is detected",
+                            "default": False,
+                            "metavar": "True|False"}
             }
 
 
