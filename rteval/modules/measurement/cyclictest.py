@@ -299,7 +299,7 @@ class Cyclictest(rtevalModulePrototype):
         if 'breaktrace' in self.__cfg and self.__cfg.breaktrace:
             self.__cmd.append("-b%d" % int(self.__cfg.breaktrace))
             self.__cmd.append("--tracemark")
-        elif 'threshold' in self.__cfg and self.__cfg.threshold:
+        elif self.__cfg.threshold:
             self.__cmd.append("-b%d" % int(self.__cfg.threshold))
 
         # Buffer for cyclictest data written to stdout
