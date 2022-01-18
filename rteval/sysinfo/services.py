@@ -62,11 +62,11 @@ class SystemServices:
             if not [1 for p in reject if fnmatch.fnmatch(servicename, p)] \
                     and os.access(service, os.X_OK):
                 cmd = '%s -qs "\(^\|\W\)status)" %s' % (getcmdpath('grep'), service)
-                c = subprocess.Popen(cmd, shell=True, text=True)
+                c = subprocess.Popen(cmd, shell=True, encoding='utf-8')
                 c.wait()
                 if c.returncode == 0:
                     cmd = ['env', '-i', 'LANG="%s"' % os.environ['LANG'], 'PATH="%s"' % os.environ['PATH'], 'TERM="%s"' % os.environ['TERM'], service, 'status']
-                    c = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                    c = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
                     c.wait()
                     if c.returncode == 0 and (c.stdout.read() or c.stderr.read()):
                         ret_services[servicename] = 'running'
@@ -81,7 +81,7 @@ class SystemServices:
         ret_services = {}
         cmd = '%s list-unit-files -t service --no-legend' % getcmdpath('systemctl')
         self.__log(Log.DEBUG, "cmd: %s" % cmd)
-        c = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        c = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
         for p in c.stdout:
             # p are lines like b'servicename.service status'
             v = p.strip().split()
@@ -91,7 +91,7 @@ class SystemServices:
 
     def services_get(self):
         cmd = [getcmdpath('ps'), '-ocomm=', '1']
-        c = subprocess.Popen(cmd, stdout=subprocess.PIPE, text=True)
+        c = subprocess.Popen(cmd, stdout=subprocess.PIPE, encoding='utf-8')
         self.__init = c.stdout.read().strip()
         if self.__init == 'systemd':
             self.__log(Log.DEBUG, "Using systemd to get services status")
