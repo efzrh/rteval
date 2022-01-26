@@ -450,7 +450,7 @@ def ModuleParameters():
                          "default": 100,
                          "metavar": "INTV_US"},
             "buckets":  {"descr": "Histogram width",
-                         "default": 2000,
+                         "default": 3500,
                          "metavar": "NUM"},
             "priority": {"descr": "Run cyclictest with the given priority",
                          "default": 95,
