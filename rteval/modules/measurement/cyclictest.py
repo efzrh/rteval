@@ -216,6 +216,12 @@ class Cyclictest(rtevalModulePrototype):
             self.__sparse = True
         else:
             self.__cpus = online_cpus()
+            # Get the cpuset from the environment
+            cpuset = os.sched_getaffinity(0)
+            # Convert the elements to strings
+            cpuset = [str(c) for c in cpuset]
+            # Only include cpus that are in the cpuset
+            self.__cpus = [c for c in self.__cpus if c in cpuset]
 
         # Sort the list of cpus to align with the order reported by cyclictest
         self.__cpus.sort(key=int)
