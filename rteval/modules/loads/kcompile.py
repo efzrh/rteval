@@ -66,6 +66,7 @@ class KBuildJob:
 
         self.runcmd = f"make O={self.objdir} -C {self.kdir} -j{self.jobs}"
         self.cleancmd = f"make O={self.objdir} -C {self.kdir} clean allmodconfig"
+        self.cleancmd += f"&& pushd {self.objdir} && {self.kdir}/scripts/config -d CONFIG_MODULE_SIG_SHA1 -e CONFIG_MODULE_SIG_SHA512 && popd && make O={self.objdir} -C {self.kdir} olddefconfig"
         if self.binder:
             self.runcmd = self.binder + " " + self.runcmd
             self.cleancmd = self.binder + " " + self.cleancmd
