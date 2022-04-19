@@ -103,6 +103,10 @@ class CpuList:
         don't error check against online cpus
         """
         result = []
+
+        if not cpulist:
+            return result
+
         for part in cpulist.split(','):
             if '-' in part:
                 a, b = part.split('-')
