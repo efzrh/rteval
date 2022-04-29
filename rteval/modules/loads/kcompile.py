@@ -202,7 +202,7 @@ class Kcompile(CommandLineLoad):
         self.cpus = {}
         self.nodes = self.topology.getnodes()
         for n in self.nodes:
-            self.cpus[n] = [int(c.split('/')[-1][3:]) for c in glob.glob('/sys/devices/system/node/node%s/cpu[0-9]*' % n)]
+            self.cpus[n] = self.topology.getcpus(n)
             self.cpus[n].sort()
 
             # if a cpulist was specified, only allow cpus in that list on the node
