@@ -28,6 +28,7 @@ import sys
 import os
 import os.path
 import glob
+import re
 import subprocess
 from rteval.modules import rtevalRuntimeError
 from rteval.modules.loads import CommandLineLoad
@@ -35,7 +36,7 @@ from rteval.Log import Log
 from rteval.misc import expand_cpulist, compress_cpulist
 from rteval.systopology import SysTopology
 
-kernel_prefix = "linux-5.13"
+DEFAULT_KERNEL_PREFIX = "linux-5.13"
 
 class KBuildJob:
     '''Class to manage a build job bound to a particular node'''
@@ -163,17 +164,19 @@ class Kcompile(CommandLineLoad):
             return
 
         # find our source tarball
-        if 'tarball' in self._cfg:
-            tarfile = os.path.join(self.srcdir, self._cfg.tarfile)
+        if self._cfg.source:
+            tarfile = os.path.join(self.srcdir, self._cfg.source)
             if not os.path.exists(tarfile):
                 raise rtevalRuntimeError(self, " tarfile %s does not exist!" % tarfile)
             self.source = tarfile
+            kernel_prefix = re.search(r"linux-\d\.\d", self.source).group(0)
         else:
-            tarfiles = glob.glob(os.path.join(self.srcdir, "%s*" % kernel_prefix))
+            tarfiles = glob.glob(os.path.join(self.srcdir, "%s*" % DEFAULT_KERNEL_PREFIX))
             if tarfiles:
                 self.source = tarfiles[0]
             else:
                 raise rtevalRuntimeError(self, " no kernel tarballs found in %s" % self.srcdir)
+            kernel_prefix = DEFAULT_KERNEL_PREFIX
 
         # check for existing directory
         kdir = None
