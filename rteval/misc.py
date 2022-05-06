@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+''' Functions for operating on a cpulists '''
 
 
 import os
@@ -36,6 +37,7 @@ def expand_cpulist(cpulist):
     return [str(i) for i in list(set(result))]
 
 def online_cpus():
+    ''' Collapse a list of cpu numbers into a string range '''
     online_cpus = []
     # Check for the online file with cpu1 since cpu0 can't always be offlined
     if os.path.exists('/sys/devices/system/cpu/cpu1/online'):
@@ -56,27 +58,31 @@ def online_cpus():
     return online_cpus
 
 def invert_cpulist(cpulist):
+    ''' return a list of online cpus not in cpulist '''
     return [c for c in online_cpus() if c not in cpulist]
 
 def compress_cpulist(cpulist):
+    ''' return a string representation of cpulist '''
     if isinstance(cpulist[0], int):
         return ",".join(str(e) for e in cpulist)
     return ",".join(cpulist)
 
 def cpuinfo():
+    ''' return a dictionary of cpu keys with various cpu information '''
     core = -1
     info = {}
-    for l in open('/proc/cpuinfo'):
-        l = l.strip()
-        if not l:
-            continue
-        # Split a maximum of one time. In case a model name has ':' in it
-        key, val = [i.strip() for i in l.split(':', 1)]
-        if key == 'processor':
-            core = val
-            info[core] = {}
-            continue
-        info[core][key] = val
+    with open('/proc/cpuinfo') as fp:
+        for l in fp:
+            l = l.strip()
+            if not l:
+                continue
+            # Split a maximum of one time. In case a model name has ':' in it
+            key, val = [i.strip() for i in l.split(':', 1)]
+            if key == 'processor':
+                core = val
+                info[core] = {}
+                continue
+            info[core][key] = val
 
     for (core, pcdict) in info.items():
         if not 'model name' in pcdict:
