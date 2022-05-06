@@ -72,15 +72,13 @@ def summarize(repfile, xslt):
         isarchive = True
 
     # Load the XSLT template
-    xsltfp = open(xslt, "r")
-    xsltdoc = lxml.etree.parse(xsltfp)
-    xsltprs = lxml.etree.XSLT(xsltdoc)
-    xsltfp.close()
+    with open(xslt, "r") as xsltfp:
+        xsltdoc = lxml.etree.parse(xsltfp)
+        xsltprs = lxml.etree.XSLT(xsltdoc)
 
     # Load the summay.xml report - with some simple sanity checks
-    xmlfp = open(summaryfile, "r")
-    xmldoc = lxml.etree.parse(xmlfp)
-    xmlfp.close()
+    with open(summaryfile, "r") as xmlfp:
+        xmldoc = lxml.etree.parse(xmlfp)
 
     if xmldoc.docinfo.root_name != 'rteval':
         raise RuntimeError("The report doesn't seem like a rteval summary report")
