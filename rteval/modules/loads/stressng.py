@@ -69,7 +69,7 @@ class Stressng(CommandLineLoad):
                 cpus[n] = [c for c in cpus[n] if str(c) in expand_cpulist(self.cpulist)]
 
         # remove nodes with no cpus available for running
-        for node, cpu in list(cpus.items()):
+        for node, cpu in cpus.items():
             if not cpu:
                 nodes.remove(node)
                 self._log(Log.DEBUG, "node %s has no available cpus, removing" % node)
