@@ -180,13 +180,14 @@ class NumaNode:
     def getmeminfo(self):
         """ read info about memory attached to this node """
         self.meminfo = {}
-        for l in open(os.path.join(self.path, "meminfo"), "r"):
-            elements = l.split()
-            key = elements[2][0:-1]
-            val = int(elements[3])
-            if len(elements) == 5 and elements[4] == "kB":
-                val *= 1024
-            self.meminfo[key] = val
+        with open(os.path.join(self.path, "meminfo"), "r") as fp:
+            for l in fp:
+                elements = l.split()
+                key = elements[2][0:-1]
+                val = int(elements[3])
+                if len(elements) == 5 and elements[4] == "kB":
+                    val *= 1024
+                self.meminfo[key] = val
 
     def getcpustr(self):
         """ return list of cpus for this node as a string """
@@ -212,13 +213,14 @@ class SimNumaNode(NumaNode):
 
     def getmeminfo(self):
         self.meminfo = {}
-        for l in open(SimNumaNode.mempath, "r"):
-            elements = l.split()
-            key = elements[0][0:-1]
-            val = int(elements[1])
-            if len(elements) == 3 and elements[2] == "kB":
-                val *= 1024
-            self.meminfo[key] = val
+        with open(SimNumaNode.mempath, "r") as fp:
+            for l in fp:
+                elements = l.split()
+                key = elements[0][0:-1]
+                val = int(elements[1])
+                if len(elements) == 3 and elements[2] == "kB":
+                    val *= 1024
+                self.meminfo[key] = val
 
 #
 # Class to abstract the system topology of numa nodes and cpus
