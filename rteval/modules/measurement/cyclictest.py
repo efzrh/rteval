@@ -24,6 +24,7 @@
 #   including keys needed to generate an equivalently functional executable
 #   are deemed to be part of the source code.
 #
+""" cyclictest.py - object to manage a cyclictest executable instance """
 
 import os
 import subprocess
@@ -254,14 +255,13 @@ class Cyclictest(rtevalModulePrototype):
     @staticmethod
     def __get_debugfs_mount():
         ret = None
-        mounts = open('/proc/mounts')
-        for l in mounts:
-            field = l.split()
-            if field[2] == "debugfs":
-                ret = field[1]
-                break
-        mounts.close()
-        return ret
+        with open('/proc/mounts') as mounts:
+            for l in mounts:
+                field = l.split()
+                if field[2] == "debugfs":
+                    ret = field[1]
+                    break
+            return ret
 
 
     def _WorkloadSetup(self):
