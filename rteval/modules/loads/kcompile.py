@@ -169,7 +169,7 @@ class Kcompile(CommandLineLoad):
             if not os.path.exists(tarfile):
                 raise rtevalRuntimeError(self, " tarfile %s does not exist!" % tarfile)
             self.source = tarfile
-            kernel_prefix = re.search(r"linux-\d\.\d", self.source).group(0)
+            kernel_prefix = re.search(r"linux-\d{1,2}\.\d{1,3}", self.source).group(0)
         else:
             tarfiles = glob.glob(os.path.join(self.srcdir, "%s*" % DEFAULT_KERNEL_PREFIX))
             if tarfiles:
@@ -177,6 +177,7 @@ class Kcompile(CommandLineLoad):
             else:
                 raise rtevalRuntimeError(self, " no kernel tarballs found in %s" % self.srcdir)
             kernel_prefix = DEFAULT_KERNEL_PREFIX
+        self._log(Log.DEBUG, f"kernel_prefix = {kernel_prefix}")
 
         # check for existing directory
         kdir = None
