@@ -54,7 +54,8 @@ class Stressng(CommandLineLoad):
         if self.cfg.arg is not None:
             self.args.append(self.cfg.arg)
         if self.cfg.timeout is not None:
-            self.args.append('--timeout %s' % str(self.cfg.timeout))
+            self.args.append('--timeout')
+            self.args.append(self.cfg.timeout)
 
         systop = SysTopology()
         # get the number of nodes
