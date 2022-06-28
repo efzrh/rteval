@@ -2,7 +2,7 @@
 %{!?python_ver: %define python_ver %(%{__python} -c "import sys ; print sys.version[:3]")}
 
 Name:		rteval
-Version:	3.3
+Version:	3.4
 Release:	1%{?dist}
 Summary:	Utility to evaluate system suitability for RT Linux
 
