@@ -97,6 +97,7 @@ default_config = {
         'xslt_histogram': default_config_search(['rteval_histogram_raw.xsl'], os.path.isfile),
         'report_interval': '600',
         'logging'    : False,
+        'srcdownload': None,
         }
     }
 
