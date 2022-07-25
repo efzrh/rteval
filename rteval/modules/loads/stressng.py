@@ -6,8 +6,9 @@ import subprocess
 import signal
 from rteval.modules.loads import CommandLineLoad
 from rteval.Log import Log
-from rteval.misc import expand_cpulist
-from rteval.systopology import SysTopology
+from rteval.systopology import CpuList, SysTopology
+
+expand_cpulist = CpuList.expand_cpulist
 
 class Stressng(CommandLineLoad):
     " This class creates a load module that runs stress-ng "
@@ -27,7 +28,7 @@ class Stressng(CommandLineLoad):
             self._donotrun = False
         else:
             self._donotrun = True
-        """ When this module runs, other load modules should not """
+        # When this module runs, other load modules should not
         self._exclusive = True
 
     def _WorkloadSetup(self):
@@ -50,7 +51,7 @@ class Stressng(CommandLineLoad):
 
         # stress-ng is only run if the user specifies an option
         self.args = ['stress-ng']
-        self.args.append('--%s' % str(self.cfg.option))
+        self.args.append(f'--{str(self.cfg.option)}')
         if self.cfg.arg is not None:
             self.args.append(self.cfg.arg)
         if self.cfg.timeout is not None:
@@ -73,11 +74,11 @@ class Stressng(CommandLineLoad):
         for node, cpu in cpus.items():
             if not cpu:
                 nodes.remove(node)
-                self._log(Log.DEBUG, "node %s has no available cpus, removing" % node)
+                self._log(Log.DEBUG, f"node {node} has no available cpus, removing")
         if self.cpulist:
             for node in nodes:
                 cpulist = ",".join([str(n) for n in cpus[node]])
-                self.args.append('--taskset %s' % cpulist)
+                self.args.append(f'--taskset {cpulist}')
 
     def _WorkloadTask(self):
         """ Kick of the workload here """
@@ -85,7 +86,7 @@ class Stressng(CommandLineLoad):
             # Only start the task once
             return
 
-        self._log(Log.DEBUG, "starting with %s" % " ".join(self.args))
+        self._log(Log.DEBUG, f'starting with {" ".join(self.args)}')
         try:
             self.process = subprocess.Popen(self.args,
                                             stdout=self.__out,
