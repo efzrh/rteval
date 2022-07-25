@@ -33,6 +33,7 @@
 #   including keys needed to generate an equivalently functional executable
 #   are deemed to be part of the source code.
 #
+""" Main module of the rteval program """
 
 import sys
 import os
@@ -48,8 +49,10 @@ from rteval import RtEval, rtevalConfig
 from rteval.modules.loads import LoadModules
 from rteval.modules.measurement import MeasurementModules
 from rteval.version import RTEVAL_VERSION
-from rteval.misc import invert_cpulist, compress_cpulist
+from rteval.systopology import CpuList, SysTopology
 from rteval.modules.loads.kcompile import ModuleParameters
+
+compress_cpulist = CpuList.compress_cpulist
 
 def summarize(repfile, xslt):
     """ Summarize an already existing XML report """
@@ -60,7 +63,7 @@ def summarize(repfile, xslt):
         try:
             t = tarfile.open(repfile)
         except:
-            print("Don't know how to summarize %s (tarfile open failed)" % repfile)
+            print(f"Don't know how to summarize {repfile} (tarfile open failed)")
             return
         element = None
         for f in t.getnames():
@@ -68,7 +71,7 @@ def summarize(repfile, xslt):
                 element = f
                 break
         if element is None:
-            print("No summary.xml found in tar archive %s" % repfile)
+            print(f"No summary.xml found in tar archive {repfile}")
             return
         tmp = tempfile.gettempdir()
         t.extract(element, path=tmp)
@@ -172,7 +175,7 @@ def parse_options(cfg, parser, cmdargs):
 
     (cmd_opts, cmd_args) = parser.parse_args(args=cmdargs)
     if cmd_opts.rteval___version:
-        print(("rteval version %s" % RTEVAL_VERSION))
+        print(f"rteval version {RTEVAL_VERSION}")
         sys.exit(0)
 
     if cmd_opts.rteval___duration:
@@ -320,11 +323,13 @@ if __name__ == '__main__':
         ldcfg = config.GetSection('loads')
         msrcfg = config.GetSection('measurement')
         if not ldcfg.cpulist and msrcfg.cpulist:
-            ldcfg.cpulist = compress_cpulist(invert_cpulist(msrcfg.cpulist))
+            invlist = SysTopology().invert_cpulist(msrcfg.cpulist)
+            ldcfg.cpulist = compress_cpulist(invlist)
         if not msrcfg.cpulist and ldcfg.cpulist:
-            msrcfg.cpulist = compress_cpulist(invert_cpulist(ldcfg.cpulist))
+            invlist = SysTopology().invert_cpulist(ldcfg.cpulist)
+            msrcfg.cpulist = compress_cpulist(invlist)
 
-        logger.log(Log.DEBUG, "workdir: %s" % rtevcfg.workdir)
+        logger.log(Log.DEBUG, f"workdir: {rtevcfg.workdir}")
 
         # if --summarize was specified then just parse the XML, print it and exit
         if rtevcfg.summarize or rtevcfg.rawhistogram:
@@ -343,22 +348,18 @@ if __name__ == '__main__':
             print("Must be root to run rteval!")
             sys.exit(-1)
 
-        logger.log(Log.DEBUG, '''rteval options:
-     workdir: %s
-     loaddir: %s
-     reportdir: %s
-     verbose: %s
-     debugging: %s
-     logging:  %s
-     duration: %f
-     sysreport: %s''' % (
-         rtevcfg.workdir, rtevcfg.srcdir,
-         rtevcfg.reportdir, rtevcfg.verbose,
-         rtevcfg.debugging, rtevcfg.logging,
-         rtevcfg.duration, rtevcfg.sysreport))
+        logger.log(Log.DEBUG, f'''rteval options:
+     workdir: {rtevcfg.workdir}
+     loaddir: {rtevcfg.srcdir}
+     reportdir: {rtevcfg.reportdir}
+     verbose: {rtevcfg.verbose}
+     debugging: {rtevcfg.debugging}
+     logging:  {rtevcfg.logging}
+     duration: {rtevcfg.duration}
+     sysreport: {rtevcfg.sysreport}''')
 
         if not os.path.isdir(rtevcfg.workdir):
-            raise RuntimeError("work directory %s does not exist" % rtevcfg.workdir)
+            raise RuntimeError(f"work directory {rtevcfg.workdir} does not exist")
 
 
         rteval = RtEval(config, loadmods, measuremods, logger)
@@ -378,7 +379,7 @@ if __name__ == '__main__':
         else:
             # ... otherwise, run the full measurement suite with loads
             ec = rteval.Measure()
-            logger.log(Log.DEBUG, "exiting with exit code: %d" % ec)
+            logger.log(Log.DEBUG, f"exiting with exit code: {ec}")
 
         sys.exit(ec)
     except KeyboardInterrupt:
