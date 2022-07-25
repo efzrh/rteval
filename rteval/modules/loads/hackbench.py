@@ -24,6 +24,7 @@
 #   including keys needed to generate an equivalently functional executable
 #   are deemed to be part of the source code.
 #
+""" Load module - run the hackbench program from rt-tests ad a load """
 
 import sys
 import os
@@ -34,8 +35,9 @@ import errno
 from signal import SIGKILL
 from rteval.modules.loads import CommandLineLoad
 from rteval.Log import Log
-from rteval.misc import expand_cpulist
-from rteval.systopology import SysTopology
+from rteval.systopology import CpuList, SysTopology
+
+expand_cpulist = CpuList.expand_cpulist
 
 class Hackbench(CommandLineLoad):
     def __init__(self, config, logger):
@@ -46,7 +48,7 @@ class Hackbench(CommandLineLoad):
         if self._donotrun:
             return
 
-        'calculate arguments based on input parameters'
+        # calculate arguments based on input parameters
         (mem, units) = self.memsize
         if units == 'KB':
             mem = mem / (1024.0 * 1024.0)
@@ -58,9 +60,9 @@ class Hackbench(CommandLineLoad):
         ratio = float(mem) / float(self.num_cpus)
         if ratio < 0.75:
             if self.__cfg.runlowmem:
-                self._log(Log.WARN, "Low memory system (%f GB/core)!" % ratio)
+                self._log(Log.WARN, f"Low memory system ({ratio} GB/core)!")
             else:
-                self._log(Log.WARN, "Low memory system (%f GB/core)! Not running hackbench" % ratio)
+                self._log(Log.WARN, f"Low memory system ({ratio} GB/core)! Not running hackbench")
                 self._donotrun = True
 
         sysTop = SysTopology()
@@ -85,7 +87,7 @@ class Hackbench(CommandLineLoad):
         for node, cpus in list(self.cpus.items()):
             if not cpus:
                 self.nodes.remove(node)
-                self._log(Log.DEBUG, "node %s has no available cpus, removing" % node)
+                self._log(Log.DEBUG, f"node {node} has no available cpus, removing")
 
         # setup jobs based on the number of cores available per node
         self.jobs = biggest * 3
@@ -95,7 +97,7 @@ class Hackbench(CommandLineLoad):
         self.__multinodes = False
         if len(self.nodes) > 1:
             self.__multinodes = True
-            self._log(Log.INFO, "running with multiple nodes (%d)" % len(self.nodes))
+            self._log(Log.INFO, f"running with multiple nodes ({len(self.nodes)})")
             if os.path.exists('/usr/bin/numactl') and not self.cpulist:
                 self.__usenumactl = True
                 self._log(Log.INFO, "using numactl for thread affinity")
@@ -121,7 +123,7 @@ class Hackbench(CommandLineLoad):
 
         self.tasks = {}
 
-        self._log(Log.DEBUG, "starting loop (jobs: %d)" % self.jobs)
+        self._log(Log.DEBUG, f"starting loop (jobs: {self.jobs})")
 
         self.started = False
 
@@ -135,14 +137,14 @@ class Hackbench(CommandLineLoad):
         else:
             args = self.args
 
-        self._log(Log.DEBUG, "starting on node %s: args = %s" % (node, args))
+        self._log(Log.DEBUG, "starting on node node{}: args = {args}")
         p = subprocess.Popen(args,
                              stdin=self.__nullfp,
                              stdout=self.__out,
                              stderr=self.__err)
         if not p:
-            self._log(Log.DEBUG, "hackbench failed to start on node %s" % node)
-            raise RuntimeError("hackbench failed to start on node %s" % node)
+            self._log(Log.DEBUG, f"hackbench failed to start on node {node}")
+            raise RuntimeError(f"hackbench failed to start on node {node}")
         return p
 
     def _WorkloadTask(self):
@@ -181,7 +183,7 @@ class Hackbench(CommandLineLoad):
 
         for node in self.nodes:
             if node in self.tasks and self.tasks[node].poll() is None:
-                self._log(Log.INFO, "cleaning up hackbench on node %s" % node)
+                self._log(Log.INFO, f"cleaning up hackbench on node {node}")
                 self.tasks[node].send_signal(SIGKILL)
                 if self.tasks[node].poll() is None:
                     time.sleep(2)
@@ -213,7 +215,3 @@ def ModuleParameters():
 def create(config, logger):
     return Hackbench(config, logger)
 
-# TODO: The following test is broken
-#if __name__ == '__main__':
-#    h = Hackbench(params={'debugging':True, 'verbose':True})
-#    h.run()
