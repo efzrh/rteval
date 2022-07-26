@@ -35,7 +35,10 @@ import math
 import libxml2
 from rteval.Log import Log
 from rteval.modules import rtevalModulePrototype
-from rteval.misc import expand_cpulist, online_cpus, cpuinfo
+from rteval.misc import cpuinfo
+from rteval.systopology import CpuList, SysTopology
+
+expand_cpulist = CpuList.expand_cpulist
 
 class RunData:
     '''class to keep instance data from a cyclictest run'''
@@ -58,14 +61,14 @@ class RunData:
         self._log = logfnc
 
     def __str__(self):
-        retval = "id:         %s\n" % self.__id
-        retval += "type:       %s\n" % self.__type
-        retval += "numsamples: %d\n" % self.__numsamples
-        retval += "min:        %d\n" % self.__min
-        retval += "max:        %d\n" % self.__max
-        retval += "stddev:     %f\n" % self.__stddev
-        retval += "mad:        %f\n" % self.__mad
-        retval += "mean:       %f\n" % self.__mean
+        retval = f"id:         {self.__id}\n"
+        retval += f"type:       {self.__type}\n"
+        retval += f"numsamples: {self.__numsamples}\n"
+        retval += f"min:        {self.__min}\n"
+        retval += f"max:        {self.__max}\n"
+        retval += f"stddev:     {self.__stddev}\n"
+        retval += f"mad:        {self.__mad}\n"
+        retval += f"mean:       {self.__mean}\n"
         return retval
 
     def get_max(self):
@@ -98,12 +101,12 @@ class RunData:
         # only have 1 (or none) set the calculated values
         # to zero and return
         if self.__numsamples <= 1:
-            self._log(Log.DEBUG, "skipping %s (%d samples)" % (self.__id, self.__numsamples))
+            self._log(Log.DEBUG, f"skipping {self.__id} ({self.__numsamples} samples)")
             self.__mad = 0
             self.__stddev = 0
             return
 
-        self._log(Log.INFO, "reducing %s" % self.__id)
+        self._log(Log.INFO, f"reducing {self.__id}")
         total = 0
         keys = list(self.__samples.keys())
         keys.sort()
@@ -198,6 +201,7 @@ class RunData:
 
 
 class Cyclictest(rtevalModulePrototype):
+    """ measurement module for rteval """
     def __init__(self, config, logger=None):
         rtevalModulePrototype.__init__(self, 'measurement', 'cyclictest', logger)
         self.__cfg = config
@@ -214,9 +218,12 @@ class Cyclictest(rtevalModulePrototype):
         if self.__cfg.cpulist:
             self.__cpulist = self.__cfg.cpulist
             self.__cpus = expand_cpulist(self.__cpulist)
+            # Only include online cpus
+            self.__cpus = CpuList(self.__cpus).cpulist
+            self.__cpus = [str(c) for c in self.__cpus]
             self.__sparse = True
         else:
-            self.__cpus = online_cpus()
+            self.__cpus = SysTopology().online_cpus_str()
             # Get the cpuset from the environment
             cpuset = os.sched_getaffinity(0)
             # Convert the elements to strings
@@ -241,12 +248,12 @@ class Cyclictest(rtevalModulePrototype):
         self.__cyclicdata['system'] = RunData('system',
                                               'system', self.__priority,
                                               logfnc=self._log)
-        self.__cyclicdata['system'].description = ("(%d cores) " % self.__numcores) + info['0']['model name']
+        self.__cyclicdata['system'].description = (f"({self.__numcores} cores) ") + info['0']['model name']
 
         if self.__sparse:
-            self._log(Log.DEBUG, "system using %d cpu cores" % self.__numcores)
+            self._log(Log.DEBUG, f"system using {self.__numcores} cpu cores")
         else:
-            self._log(Log.DEBUG, "system has %d cpu cores" % self.__numcores)
+            self._log(Log.DEBUG, f"system has {self.__numcores} cpu cores")
         self.__started = False
         self.__cyclicoutput = None
         self.__breaktraceval = None
@@ -273,30 +280,30 @@ class Cyclictest(rtevalModulePrototype):
 
 
     def _WorkloadPrepare(self):
-        self.__interval = 'interval' in self.__cfg and '-i%d' % int(self.__cfg.interval) or ""
+        self.__interval = 'interval' in self.__cfg and f'-i{int(self.__cfg.interval)}' or ""
 
         self.__cmd = ['cyclictest',
                       self.__interval,
                       '-qmu',
-                      '-h %d' % self.__buckets,
-                      "-p%d" % int(self.__priority),
+                      f'-h {self.__buckets}',
+                      f"-p{int(self.__priority)}",
                       ]
         if self.__sparse:
-            self.__cmd.append('-t%d' % self.__numcores)
-            self.__cmd.append('-a%s' % self.__cpulist)
+            self.__cmd.append(f'-t{self.__numcores}')
+            self.__cmd.append(f'-a{self.__cpulist}')
         else:
             self.__cmd.append('-t')
             self.__cmd.append('-a')
 
         if 'threads' in self.__cfg and self.__cfg.threads:
-            self.__cmd.append("-t%d" % int(self.__cfg.threads))
+            self.__cmd.append(f"-t{int(self.__cfg.threads)}")
 
         # Should have either breaktrace or threshold, not both
         if 'breaktrace' in self.__cfg and self.__cfg.breaktrace:
-            self.__cmd.append("-b%d" % int(self.__cfg.breaktrace))
+            self.__cmd.append(f"-b{int(self.__cfg.breaktrace)}")
             self.__cmd.append("--tracemark")
         elif self.__cfg.threshold:
-            self.__cmd.append("-b%d" % int(self.__cfg.threshold))
+            self.__cmd.append(f"-b{int(self.__cfg.threshold)}")
 
         # Buffer for cyclictest data written to stdout
         self.__cyclicoutput = tempfile.SpooledTemporaryFile(mode='w+b')
@@ -307,17 +314,16 @@ class Cyclictest(rtevalModulePrototype):
             # Don't restart cyclictest if it is already runing
             return
 
-        self._log(Log.DEBUG, "starting with cmd: %s" % " ".join(self.__cmd))
+        self._log(Log.DEBUG, f'starting with cmd: {" ".join(self.__cmd)}')
         self.__nullfp = os.open('/dev/null', os.O_RDWR)
 
         debugdir = self.__get_debugfs_mount()
         if 'breaktrace' in self.__cfg and self.__cfg.breaktrace and debugdir:
             # Ensure that the trace log is clean
             trace = os.path.join(debugdir, 'tracing', 'trace')
-            fp = open(os.path.join(trace), "w")
-            fp.write("0")
-            fp.flush()
-            fp.close()
+            with open(os.path.join(trace), "w") as fp:
+                fp.write("0")
+                fp.flush()
 
         self.__cyclicoutput.seek(0)
         try:
@@ -380,7 +386,7 @@ class Cyclictest(rtevalModulePrototype):
             try:
                 index = int(vals[0])
             except:
-                self._log(Log.DEBUG, "cyclictest: unexpected output: %s" % line)
+                self._log(Log.DEBUG, f"cyclictest: unexpected output: {line}")
                 continue
 
             for i, core in enumerate(self.__cpus):
@@ -420,8 +426,7 @@ class Cyclictest(rtevalModulePrototype):
 
         # Let the user know if max latency overshot the number of buckets
         if self.__cyclicdata["system"].get_max() > self.__buckets:
-            self._log(Log.ERR, "Max latency(%dus) exceeded histogram range(%dus). Skipping statistics" %
-                      (self.__cyclicdata["system"].get_max(), self.__buckets))
+            self._log(Log.ERR, f'Max latency({self.__cyclicdata["system"].get_max()}us) exceeded histogram range({self.__buckets}us). Skipping statistics')
             self._log(Log.ERR, "Increase number of buckets to avoid lost samples")
             return rep_n
 
