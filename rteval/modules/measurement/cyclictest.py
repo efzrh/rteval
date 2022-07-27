@@ -36,7 +36,7 @@ import libxml2
 from rteval.Log import Log
 from rteval.modules import rtevalModulePrototype
 from rteval.misc import cpuinfo
-from rteval.systopology import CpuList, SysTopology
+from rteval.systopology import CpuList, SysTopology, collapse_cpulist
 
 expand_cpulist = CpuList.expand_cpulist
 
@@ -220,6 +220,8 @@ class Cyclictest(rtevalModulePrototype):
             self.__cpus = expand_cpulist(self.__cpulist)
             # Only include online cpus
             self.__cpus = CpuList(self.__cpus).cpulist
+            # Reset cpulist from the newly calculated self.__cpus
+            self.__cpulist = collapse_cpulist(self.__cpus)
             self.__cpus = [str(c) for c in self.__cpus]
             self.__sparse = True
         else:
