@@ -137,7 +137,7 @@ class Hackbench(CommandLineLoad):
         else:
             args = self.args
 
-        self._log(Log.DEBUG, "starting on node node{}: args = {args}")
+        self._log(Log.DEBUG, f"starting on node {node}: args = {args}")
         p = subprocess.Popen(args,
                              stdin=self.__nullfp,
                              stdout=self.__out,
