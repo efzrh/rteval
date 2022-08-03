@@ -278,6 +278,10 @@ if __name__ == '__main__':
                 major_version = re.search(r"\d{1,2}", kernel_prefix).group(0)
                 url = "https://kernel.org/pub/linux/kernel/v" + major_version + ".x/"
 
+            file_ext = rtevcfg.srcdownload.split(kernel_prefix)[-1]
+
+            if file_ext and file_ext not in ('.tar.xz', '.tar.gz'):
+                sys.exit("Invalid file extension for the kernel source. Exiting")
 
             if rtevcfg.srcdownload.endswith(".gz") or 'rc' in rtevcfg.srcdownload:
                 rtevcfg.srcdownload = "linux-" + kernel_prefix + ".tar.gz"
