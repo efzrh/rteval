@@ -176,7 +176,7 @@ class Kcompile(CommandLineLoad):
             if not os.path.exists(tarfile):
                 raise rtevalRuntimeError(self, f" tarfile {tarfile} does not exist!")
             self.source = tarfile
-            kernel_prefix = re.search(r"linux-\d{1,2}\.\d{1,3}", self.source).group(0)
+            kernel_prefix = re.search(r"linux-\d{1,2}\.\d{1,3}\.*\d{1,2}", self.source).group(0)
         else:
             tarfiles = glob.glob(os.path.join(self.srcdir, f"{DEFAULT_KERNEL_PREFIX}*"))
             if tarfiles:
