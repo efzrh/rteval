@@ -235,7 +235,7 @@ class Kcompile(CommandLineLoad):
 
             # if a cpulist was specified, only allow cpus in that list on the node
             if self.cpulist:
-                self.cpus[n] = [c for c in self.cpus[n] if str(c) in expand_cpulist(self.cpulist)]
+                self.cpus[n] = [c for c in self.cpus[n] if c in expand_cpulist(self.cpulist)]
 
         # remove nodes with no cpus available for running
         for node, cpus in self.cpus.items():

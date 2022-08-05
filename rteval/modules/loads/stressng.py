@@ -68,7 +68,7 @@ class Stressng(CommandLineLoad):
             cpus[n] = systop.getcpus(int(n))
             # if a cpulist was specified, only allow cpus in that list on the node
             if self.cpulist:
-                cpus[n] = [c for c in cpus[n] if str(c) in expand_cpulist(self.cpulist)]
+                cpus[n] = [c for c in cpus[n] if c in expand_cpulist(self.cpulist)]
 
         # remove nodes with no cpus available for running
         for node, cpu in cpus.items():
