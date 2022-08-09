@@ -49,10 +49,11 @@ from rteval import RtEval, rtevalConfig
 from rteval.modules.loads import LoadModules
 from rteval.modules.measurement import MeasurementModules
 from rteval.version import RTEVAL_VERSION
-from rteval.systopology import CpuList, SysTopology
+from rteval.systopology import CpuList, SysTopology, collapse_cpulist
 from rteval.modules.loads.kcompile import ModuleParameters
 
 compress_cpulist = CpuList.compress_cpulist
+expand_cpulist = CpuList.expand_cpulist
 
 def summarize(repfile, xslt):
     """ Summarize an already existing XML report """
@@ -199,6 +200,11 @@ def parse_options(cfg, parser, cmdargs):
 
     return cmd_args
 
+def remove_offline(cpulist):
+    """ return cpulist in collapsed compressed form with only online cpus """
+    tmplist = expand_cpulist(cpulist)
+    tmplist = SysTopology().online_cpulist(tmplist)
+    return collapse_cpulist(tmplist)
 
 
 if __name__ == '__main__':
@@ -322,17 +328,29 @@ if __name__ == '__main__':
             sys.exit(0)
 
 
-        # if we only specified one set of cpus (loads or measurement)
-        # default the other to the inverse of the specified list
         ldcfg = config.GetSection('loads')
         msrcfg = config.GetSection('measurement')
+        if ldcfg.cpulist and msrcfg.cpulist:
+            ldcfg.cpulist = remove_offline(ldcfg.cpulist)
+            msrcfg.cpulist = remove_offline(msrcfg.cpulist)
+        # if we only specified one set of cpus (loads or measurement)
+        # default the other to the inverse of the specified list
         if not ldcfg.cpulist and msrcfg.cpulist:
-            invlist = SysTopology().invert_cpulist(msrcfg.cpulist)
-            ldcfg.cpulist = compress_cpulist(invlist)
+            tmplist = expand_cpulist(msrcfg.cpulist)
+            tmplist = SysTopology().invert_cpulist(tmplist)
+            ldcfg.cpulist = compress_cpulist(tmplist)
+            msrcfg.cpulist = remove_offline(msrcfg.cpulist)
         if not msrcfg.cpulist and ldcfg.cpulist:
-            invlist = SysTopology().invert_cpulist(ldcfg.cpulist)
-            msrcfg.cpulist = compress_cpulist(invlist)
+            tmplist = expand_cpulist(ldcfg.cpulist)
+            tmplist = SysTopology().invert_cpulist(tmplist)
+            msrcfg.cpulist = compress_cpulist(tmplist)
+            ldcfg.cpulist = remove_offline(ldcfg.cpulist)
 
+        if ldcfg.cpulist:
+            logger.log(Log.DEBUG, f"loads cpulist: {ldcfg.cpulist}")
+        # if --onlyload is specified msrcfg.cpulist is unused
+        if msrcfg.cpulist and not rtevcfg.onlyload:
+            logger.log(Log.DEBUG, f"measurement cpulist: {msrcfg.cpulist}")
         logger.log(Log.DEBUG, f"workdir: {rtevcfg.workdir}")
 
         # if --summarize was specified then just parse the XML, print it and exit
@@ -374,8 +392,7 @@ if __name__ == '__main__':
             # No reports will be created.
             loadmods.Start()
             nthreads = loadmods.Unleash()
-            logger.log(Log.INFO, "Started %i load threads - will run for %f seconds" % (
-                nthreads, rtevcfg.duration))
+            logger.log(Log.INFO, f"Started {nthreads} load threads - will run for {rtevcfg.duration} seconds")
             logger.log(Log.INFO, "No measurements will be performed, due to the --onlyload option")
             time.sleep(rtevcfg.duration)
             loadmods.Stop()

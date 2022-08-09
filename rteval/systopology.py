@@ -329,7 +329,11 @@ class SysTopology:
 
     def invert_cpulist(self, cpulist):
         """ return a list of online cpus not in cpulist """
-        return [c for c in self.online_cpus_str() if c not in cpulist]
+        return [c for c in self.online_cpus() if c not in cpulist]
+
+    def online_cpulist(self, cpulist):
+        """ return a list of online cpus in cpulist """
+        return [c for c in self.online_cpus() if c in cpulist]
 
 if __name__ == "__main__":
 
