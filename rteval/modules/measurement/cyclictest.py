@@ -35,7 +35,7 @@ import math
 import libxml2
 from rteval.Log import Log
 from rteval.modules import rtevalModulePrototype
-from rteval.misc import cpuinfo
+from rteval.systopology import cpuinfo
 from rteval.systopology import CpuList, SysTopology, collapse_cpulist
 
 expand_cpulist = CpuList.expand_cpulist

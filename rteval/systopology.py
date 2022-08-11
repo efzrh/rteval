@@ -54,6 +54,46 @@ def sysread(path, obj):
     with open(os.path.join(path, obj), "r") as fp:
         return fp.readline().strip()
 
+def cpuinfo():
+    ''' return a dictionary of cpu keys with various cpu information '''
+    core = -1
+    info = {}
+    with open('/proc/cpuinfo') as fp:
+        for l in fp:
+            l = l.strip()
+            if not l:
+                continue
+            # Split a maximum of one time. In case a model name has ':' in it
+            key, val = [i.strip() for i in l.split(':', 1)]
+            if key == 'processor':
+                core = val
+                info[core] = {}
+                continue
+            info[core][key] = val
+
+    for (core, pcdict) in info.items():
+        if not 'model name' in pcdict:
+            # On Arm CPU implementer is present
+            # Construct the model_name from the following fields
+            if 'CPU implementer' in pcdict:
+                model_name = [pcdict.get('CPU implementer')]
+                model_name.append(pcdict.get('CPU architecture'))
+                model_name.append(pcdict.get('CPU variant'))
+                model_name.append(pcdict.get('CPU part'))
+                model_name.append(pcdict.get('CPU revision'))
+
+                # If a list item is None, remove it
+                model_name = [name for name in model_name if name]
+
+                # Convert the model_name list into a string
+                model_name = " ".join(model_name)
+                pcdict['model name'] = model_name
+            else:
+                pcdict['model name'] = 'Unknown'
+
+    return info
+
+
 #
 # class to provide access to a list of cpus
 #
