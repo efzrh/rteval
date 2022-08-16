@@ -13,6 +13,14 @@
     <xsl:value-of select="run_info/date"/><xsl:text> </xsl:text><xsl:value-of select="run_info/time"/>
     <xsl:text>&#10;</xsl:text>
 
+    <xsl:text>   Loads:        </xsl:text>
+    <xsl:value-of select="loads/@loads"/><xsl:text> loads run on cores </xsl:text><xsl:value-of select="loads/@loadcpus"/>
+    <xsl:text>&#10;</xsl:text>
+
+    <xsl:text>   Measurement:  </xsl:text>
+    <xsl:text>measurement threads run on cores </xsl:text><xsl:value-of select="Measurements/@measurecpus"/>
+    <xsl:text>&#10;</xsl:text>
+
     <xsl:text>   Run time:     </xsl:text>
     <xsl:value-of select="run_info/@days"/><xsl:text> days </xsl:text>
     <xsl:value-of select="run_info/@hours"/><xsl:text>h </xsl:text>

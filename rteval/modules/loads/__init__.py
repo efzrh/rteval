@@ -30,6 +30,7 @@ import libxml2
 from rteval.Log import Log
 from rteval.rtevalConfig import rtevalCfgSection
 from rteval.modules import RtEvalModules, rtevalModulePrototype
+from rteval.systopology import collapse_cpulist, CpuList, SysTopology as SysTop
 
 class LoadThread(rtevalModulePrototype):
     def __init__(self, name, config, logger=None):
@@ -131,6 +132,14 @@ class LoadModules(RtEvalModules):
     def MakeReport(self):
         rep_n = RtEvalModules.MakeReport(self)
         rep_n.newProp("load_average", str(self.GetLoadAvg()))
+        rep_n.newProp("loads", str(self.ModulesLoaded()))
+        cpulist = self._cfg.GetSection(self._module_config).cpulist
+        if cpulist:
+            # Convert str to list and remove offline cpus
+            cpulist = CpuList(cpulist).cpulist
+        else:
+            cpulist = SysTop().online_cpus()
+        rep_n.newProp("loadcpus", collapse_cpulist(cpulist))
 
         return rep_n
 

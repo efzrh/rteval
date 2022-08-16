@@ -24,7 +24,7 @@
 
 import libxml2
 from rteval.modules import RtEvalModules, ModuleContainer
-
+from rteval.systopology import collapse_cpulist, CpuList, SysTopology as SysTop
 
 class MeasurementProfile(RtEvalModules):
     """Keeps and controls all the measurement modules with the same measurement profile"""
@@ -189,6 +189,14 @@ measurement profiles, based on their characteristics"""
 
         # Get the reports from all meaurement modules in all measurement profiles
         rep_n = libxml2.newNode("Measurements")
+        cpulist = self.__cfg.GetSection("measurement").cpulist
+        if cpulist:
+            # Convert str to list and remove offline cpus
+            cpulist = CpuList(cpulist).cpulist
+        else:
+            cpulist = SysTop().online_cpus()
+        rep_n.newProp("measurecpus", collapse_cpulist(cpulist))
+
         for mp in self.__measureprofiles:
             mprep_n = mp.MakeReport()
             if mprep_n:
