@@ -145,10 +145,8 @@ class LoadModules(RtEvalModules):
 
 
     def SaveLoadAvg(self):
-        # open the loadavg /proc entry
-        p = open("/proc/loadavg")
-        load = float(p.readline().split()[0])
-        p.close()
+        with open("/proc/loadavg") as p:
+            load = float(p.readline().split()[0])
         self.__loadavg_accum += load
         self.__loadavg_samples += 1
 
