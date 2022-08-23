@@ -42,7 +42,7 @@ class SystemInfo(KernelInfo, SystemServices, dmi.DMIinfo, CPUtopology,
         self.__logger = logger
         KernelInfo.__init__(self, logger=logger)
         SystemServices.__init__(self, logger=logger)
-        dmi.DMIinfo.__init__(self, config, logger=logger)
+        dmi.DMIinfo.__init__(self, logger=logger)
         CPUtopology.__init__(self)
         OSInfo.__init__(self, logger=logger)
         cmdlineInfo.__init__(self, logger=logger)
@@ -80,8 +80,8 @@ if __name__ == "__main__":
     cfg.installdir = "."
     si = SystemInfo(cfg, logger=l)
 
-    print("\tRunning on %s" % si.get_base_os())
-    print("\tNUMA nodes: %d" % si.mem_get_numa_nodes())
+    print(f"\tRunning on {si.get_base_os()}")
+    print(f"\tNUMA nodes: {si.mem_get_numa_nodes()}")
     print("\tMemory available: %03.2f %s\n" % si.mem_get_size())
 
     print("\tServices: ")

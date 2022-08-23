@@ -1,6 +1,4 @@
 #
-#   dmi.py - class to wrap DMI Table information
-#
 #   Copyright 2009 - 2013   Clark Williams <williams@redhat.com>
 #   Copyright 2009 - 2013   David Sommerseth <davids@redhat.com>
 #
@@ -24,6 +22,7 @@
 #   including keys needed to generate an equivalently functional executable
 #   are deemed to be part of the source code.
 #
+""" dmi.py class to wrap DMI Table Information """
 
 import sys
 import os
@@ -52,16 +51,18 @@ def ProcessWarnings():
     if warnings is None:
         return
 
+    ignore1  = '/dev/mem: Permission denied'
+    ignore2 = 'No SMBIOS nor DMI entry point found, sorry.'
+    ignore3 = 'Failed to open memory buffer (/dev/mem): Permission denied'
+    ignore = (ignore1, ignore2, ignore3)
     for warnline in warnings.split('\n'):
         # Ignore these warnings, as they are "valid" if not running as root
-        if warnline == '/dev/mem: Permission denied':
-            continue
-        if warnline == 'No SMBIOS nor DMI entry point found, sorry.':
+        if warnline in ignore:
             continue
 
         # All other warnings will be printed
         if len(warnline) > 0:
-            print("** DMI WARNING ** %s" % warnline)
+            print(f"** DMI WARNING ** {warnline}")
 
     dmidecode.clear_warnings()
 
@@ -69,8 +70,7 @@ def ProcessWarnings():
 class DMIinfo:
     '''class used to obtain DMI info via python-dmidecode'''
 
-    # TODO: Remove unnecessary config
-    def __init__(self, config, logger):
+    def __init__(self, logger):
         self.__version = '0.5'
 
         if not dmidecode_loaded:
@@ -83,22 +83,24 @@ class DMIinfo:
 
         self.__xsltparser = self.__load_xslt('rteval_dmi.xsl')
 
-    def __load_xslt(self, fname):
-        xsltfile = None
+    @staticmethod
+    def __load_xslt(fname):
+        xsltf = None
         if os.path.exists(fname):
-            xsltfile = open(fname, "r")
-        elif rtevalConfig.default_config_search([fname], os.path.isfile):
-            xsltfile = open(rtevalConfig.default_config_search([fname], os.path.isfile), "r")
+            xsltf = fname
+        else:
+            xsltf = rtevalConfig.default_config_search([fname], os.path.isfile)
 
-        if xsltfile:
-            xsltdoc = lxml.etree.parse(xsltfile)
-            ret = lxml.etree.XSLT(xsltdoc)
-            xsltfile.close()
+        if xsltf:
+            with open(xsltf, "r") as xsltfile:
+                xsltdoc = lxml.etree.parse(xsltfile)
+                ret = lxml.etree.XSLT(xsltdoc)
             return ret
 
         raise RuntimeError(f'Could not locate XSLT template for DMI data ({fname})')
 
     def MakeReport(self):
+        """ Add DMI information to final report """
         rep_n = libxml2.newNode("DMIinfo")
         rep_n.newProp("version", self.__version)
         if self.__fake:
@@ -113,7 +115,7 @@ class DMIinfo:
         return rep_n
 
 def unit_test(rootdir):
-    """ unit_test for dmi.py, looks a little crufty! """
+    """ unit_test for dmi.py """
 
     class UnittestConfigDummy:
         def __init__(self, rootdir):
@@ -132,15 +134,14 @@ def unit_test(rootdir):
 
         log = Log()
         log.SetLogVerbosity(Log.DEBUG|Log.INFO)
-        cfg = UnittestConfigDummy(rootdir)
-        d = DMIinfo(cfg, log)
+        d = DMIinfo(log)
         dx = d.MakeReport()
         x = libxml2.newDoc("1.0")
         x.setRootElement(dx)
         x.saveFormatFileEnc("-", "UTF-8", 1)
         return 0
     except Exception as e:
-        print("** EXCEPTION: %s" % str(e))
+        print(f"** EXCEPTION: {str(e)}")
         return 1
 
 if __name__ == '__main__':
