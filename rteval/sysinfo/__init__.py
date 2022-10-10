@@ -32,7 +32,7 @@ from rteval.sysinfo.services import SystemServices
 from rteval.sysinfo.cputopology import CPUtopology
 from rteval.sysinfo.memory import MemoryInfo
 from rteval.sysinfo.osinfo import OSInfo
-from rteval.sysinfo.network import NetworkInfo
+from rteval.sysinfo.newnet import NetworkInfo
 from rteval.sysinfo.cmdline import cmdlineInfo
 from rteval.sysinfo import dmi
 
@@ -46,6 +46,7 @@ class SystemInfo(KernelInfo, SystemServices, dmi.DMIinfo, CPUtopology,
         CPUtopology.__init__(self)
         OSInfo.__init__(self, logger=logger)
         cmdlineInfo.__init__(self, logger=logger)
+        NetworkInfo.__init__(self, logger=logger)
 
         # Parse initial DMI decoding errors
         dmi.ProcessWarnings()
