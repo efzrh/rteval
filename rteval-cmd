@@ -210,8 +210,6 @@ def remove_offline(cpulist):
 if __name__ == '__main__':
     from rteval.sysinfo import dmi
 
-    dmi.ProcessWarnings()
-
     # set LD_BIND_NOW to resolve shared library symbols
     # note: any string will do, nothing significant about 'rteval'
 
@@ -260,6 +258,8 @@ if __name__ == '__main__':
                 | (rtevcfg.verbose and Log.INFO) \
                 | (rtevcfg.debugging and Log.DEBUG)
         logger.SetLogVerbosity(loglev)
+
+        dmi.ProcessWarnings(logger=logger)
 
         # Load modules
         loadmods = LoadModules(config, logger=logger)

@@ -49,7 +49,7 @@ class SystemInfo(KernelInfo, SystemServices, dmi.DMIinfo, CPUtopology,
         NetworkInfo.__init__(self, logger=logger)
 
         # Parse initial DMI decoding errors
-        dmi.ProcessWarnings()
+        dmi.ProcessWarnings(logger=logger)
 
         # Parse CPU info
         CPUtopology._parse(self)

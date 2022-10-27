@@ -1,6 +1,7 @@
 #
 #   Copyright 2009 - 2013   Clark Williams <williams@redhat.com>
 #   Copyright 2009 - 2013   David Sommerseth <davids@redhat.com>
+#   Copyright 2022          John Kacur <jkacur@redhat.com>
 #
 #   This program is free software; you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -34,14 +35,19 @@ from rteval import rtevalConfig
 
 try:
     import dmidecode
-    dmidecode_loaded = True
+    dmidecode_avail = True
 except ModuleNotFoundError:
-    dmidecode_loaded = False
+    dmidecode_avail = False
 
-def ProcessWarnings():
+def set_dmidecode_avail(val):
+    """ Used to set global variable dmidecode_avail from a function """
+    global dmidecode_avail
+    dmidecode_avail = val
+
+def ProcessWarnings(logger=None):
     """ Process Warnings from dmidecode """
 
-    if not dmidecode_loaded:
+    if not dmidecode_avail:
         return
 
     if not hasattr(dmidecode, 'get_warnings'):
@@ -62,7 +68,8 @@ def ProcessWarnings():
 
         # All other warnings will be printed
         if len(warnline) > 0:
-            print(f"** DMI WARNING ** {warnline}")
+            logger.log(Log.DEBUG, f"** DMI WARNING ** {warnline}")
+            set_dmidecode_avail(False)
 
     dmidecode.clear_warnings()
 
@@ -70,11 +77,11 @@ def ProcessWarnings():
 class DMIinfo:
     '''class used to obtain DMI info via python-dmidecode'''
 
-    def __init__(self, logger):
-        self.__version = '0.5'
+    def __init__(self, logger=None):
+        self.__version = '0.6'
 
-        if not dmidecode_loaded:
-            logger.log(Log.DEBUG|Log.WARN, "No dmidecode module found, ignoring DMI tables")
+        if not dmidecode_avail:
+            logger.log(Log.DEBUG, "DMI info unavailable, ignoring DMI tables")
             self.__fake = True
             return
 
@@ -127,14 +134,15 @@ def unit_test(rootdir):
                 self.__dict__[k] = self.config[k]
 
     try:
-        ProcessWarnings()
+        log = Log()
+        log.SetLogVerbosity(Log.DEBUG|Log.INFO)
+
+        ProcessWarnings(logger=log)
         if os.getuid() != 0:
             print("** ERROR **  Must be root to run this unit_test()")
             return 1
 
-        log = Log()
-        log.SetLogVerbosity(Log.DEBUG|Log.INFO)
-        d = DMIinfo(log)
+        d = DMIinfo(logger=log)
         dx = d.MakeReport()
         x = libxml2.newDoc("1.0")
         x.setRootElement(dx)
