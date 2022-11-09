@@ -196,7 +196,7 @@ class rtevalConfig:
 
         # get our system topology info
         self.__systopology = SysTopology()
-        print(("got system topology: %s" % self.__systopology))
+        print(f"got system topology: {self.__systopology}")
 
         # Import the default config first
         for sect, vals in list(default_config.items()):
@@ -225,7 +225,7 @@ class rtevalConfig:
         "Simple method for dumping config when object is used as a string"
         ret = ""
         for sect in list(self.__config_data.keys()):
-            ret += "[%s]\n%s\n" % (sect, str(self.__config_data[sect]))
+            ret += f"[{sect}]\n{str(self.__config_data[sect])}\n"
         return ret
 
 
@@ -240,7 +240,7 @@ class rtevalConfig:
         for f in ('rteval.conf', '/etc/rteval.conf'):
             p = os.path.abspath(f)
             if os.path.exists(p):
-                self.__info("found config file %s" % p)
+                self.__info(f"found config file {p}")
                 return p
         raise RuntimeError("Unable to find configfile")
 
@@ -258,7 +258,7 @@ class rtevalConfig:
             # Don't try to reread this file if it's already been parsed
             return
 
-        self.__info("reading config file %s" % cfgfile)
+        self.__info(f"reading config file {cfgfile}")
         ini = configparser.ConfigParser()
         ini.optionxform = str
         ini.read(cfgfile)
@@ -321,7 +321,7 @@ class rtevalConfig:
             # Return a new object with config settings of a given section
             return self.__config_data[section]
         except KeyError:
-            raise KeyError("The section '%s' does not exist in the config file" % section)
+            raise KeyError(f"The section '{section}' does not exist in the config file")
 
 
 def unit_test(rootdir):
