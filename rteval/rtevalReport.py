@@ -100,11 +100,11 @@ class rtevalReport:
 
     def _show_report(self, xmlfile, xsltfile):
         '''summarize a previously generated xml file'''
-        print("Loading %s for summarizing" % xmlfile)
+        print(f"Loading {xmlfile} for summarizing")
 
         xsltfullpath = os.path.join(self.__installdir, xsltfile)
         if not os.path.exists(xsltfullpath):
-            raise RuntimeError("can't find XSL template (%s)!" % xsltfullpath)
+            raise RuntimeError(f"can't find XSL template ({xsltfullpath})!")
 
         xmlreport = xmlout.XMLOut('rteval', self.__version)
         xmlreport.LoadReport(xmlfile)
@@ -131,7 +131,7 @@ class rtevalReport:
 
     def _tar_results(self):
         if not os.path.isdir(self.__reportdir):
-            raise RuntimeError("no such directory: %s" % self.__reportdir)
+            raise RuntimeError(f"no such directory: {self.__reportdir}")
 
         dirname = os.path.dirname(self.__reportdir)
         rptdir = os.path.basename(self.__reportdir)
