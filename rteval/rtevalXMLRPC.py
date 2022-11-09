@@ -33,7 +33,7 @@ from .Log import Log
 class rtevalXMLRPC:
     def __init__(self, host, logger, mailer=None):
         self.__host = host
-        self.__url = "http://%s/rteval/API1/" % self.__host
+        self.__url = f"http://{self.__host}/rteval/API1/"
         self.__logger = logger
         self.__mailer = mailer
         self.__client = rtevalclient.rtevalclient(self.__url)
@@ -41,7 +41,7 @@ class rtevalXMLRPC:
 
     def Ping(self):
         res = None
-        self.__logger.log(Log.DEBUG, "Checking if XML-RPC server '%s' is reachable" % self.__host)
+        self.__logger.log(Log.DEBUG, f"Checking if XML-RPC server '{self.__host}' is reachable")
         attempt = 0
         ping_success = False
         warning_sent = False
@@ -52,10 +52,10 @@ class rtevalXMLRPC:
                 ping_success = True
             except xmlrpc.client.ProtocolError:
                 # Server do not support Hello(), but is reachable
-                self.__logger.log(Log.INFO, "Got XML-RPC connection with %s but it did not support Hello()" % self.__host)
+                self.__logger.log(Log.INFO, f"Got XML-RPC connection with {self.__host} but it did not support Hello()")
                 res = None
             except socket.error as err:
-                self.__logger.log(Log.INFO, "Could not establish XML-RPC contact with %s\n%s" % (self.__host, str(err)))
+                self.__logger.log(Log.INFO, f"Could not establish XML-RPC contact with {self.__host}\n{str(err)}")
 
                 # Do attempts handling
                 attempt += 1
@@ -63,17 +63,16 @@ class rtevalXMLRPC:
                     break # To avoid sleeping before we abort
 
                 if (self.__mailer is not None) and (not warning_sent):
-                    self.__mailer.SendMessage("[RTEVAL:WARNING] Failed to ping XML-RPC server", "Server %s did not respond." % self.__host)
+                    self.__mailer.SendMessage("[RTEVAL:WARNING] Failed to ping XML-RPC server", f"Server {self.__host} did not respond.")
                     warning_sent = True
 
-                print("Failed pinging XML-RPC server.  Doing another attempt(%i) " % attempt)
+                print(f"Failed pinging XML-RPC server.  Doing another attempt({attempt}) ")
                 time.sleep(attempt) #*15) # Incremental sleep - sleep attempts*15 seconds
                 ping_success = False
 
         if res:
-            self.__logger.log(Log.INFO, "Verified XML-RPC connection with %s (XML-RPC API version: %i)" % (res["server"], res["APIversion"]))
-            self.__logger.log(Log.DEBUG, "Recieved greeting: %s" % res["greeting"])
-
+            self.__logger.log(Log.INFO, f'Verified XML-RPC connection with {res["server"]} (XML-RPC API version: {res["APIversion"]})')
+            self.__logger.log(Log.DEBUG, f"Recieved greeting: {res['greeting']}")
         return ping_success
 
 
@@ -85,9 +84,9 @@ class rtevalXMLRPC:
         warning_sent = False
         while attempt < 6:
             try:
-                print("Submitting report to %s" % self.__url)
+                print(f"Submitting report to {self.__url}")
                 rterid = self.__client.SendReport(xmlreport)
-                print("Report registered with submission id %i" % rterid)
+                print(f"Report registered with submission id {rterid}")
                 attempt = 10
                 exitcode = 0 # Success
             except socket.error:
@@ -96,12 +95,10 @@ class rtevalXMLRPC:
                     break # To avoid sleeping before we abort
 
                 if (self.__mailer is not None) and (not warning_sent):
-                    self.__mailer.SendMessage("[RTEVAL:WARNING] Failed to submit report to XML-RPC server",
-                                              "Server %s did not respond.  Not giving up yet."
-                                              % self.__host)
+                    self.__mailer.SendMessage("[RTEVAL:WARNING] Failed to submit report to XML-RPC server", f"Server {self.__host} did not respond.  Not giving up yet.")
                     warning_sent = True
 
-                print("Failed sending report.  Doing another attempt(%i) " % attempt)
+                print(f"Failed sending report. Making another attempt({attempt}) ")
                 time.sleep(attempt) #*5*60) # Incremental sleep - sleep attempts*5 minutes
 
             except Exception as err:
@@ -111,12 +108,9 @@ class rtevalXMLRPC:
         if self.__mailer is not None:
             # Send final result messages
             if exitcode == 2:
-                self.__mailer.SendMessage("[RTEVAL:FAILURE] Failed to submit report to XML-RPC server",
-                                          "Server %s did not respond at all after %i attempts."
-                                          % (self.__host, attempt - 1))
+                self.__mailer.SendMessage("[RTEVAL:FAILURE] Failed to submit report to XML-RPC server", f"Server {self.__host} did not respond at all after {attempt - 1} attempts.")
             elif (exitcode == 0) and warning_sent:
                 self.__mailer.SendMessage("[RTEVAL:SUCCESS] XML-RPC server available again",
-                                          "Succeeded to submit the report to %s"
-                                          % self.__host)
+                                          f"Succeeded to submit the report to {self.__host}")
 
         return exitcode
