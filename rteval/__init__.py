@@ -59,7 +59,7 @@ def sig_handler(signum, frame):
         stopsig_received = True
         print("*** stop signal received - stopping rteval run ***")
     else:
-        raise RuntimeError("SIGNAL received! (%d)" % signum)
+        raise RuntimeError(f"SIGNAL received! ({signum})")
 
 class RtEval(rtevalReport):
     def __init__(self, config, loadmods, measuremods, logger):
@@ -96,10 +96,10 @@ class RtEval(rtevalReport):
             self.__mailer = None
 
         if not os.path.exists(self.__rtevcfg.xslt_report):
-            raise RuntimeError("can't find XSL template (%s)!" % self.__rtevcfg.xslt_report)
+            raise RuntimeError(f"can't find XSL template ({self.__rtevcfg.xslt_report})!")
 
         # Add rteval directory into module search path
-        sys.path.insert(0, '%s/rteval' % sysconfig.get_python_lib())
+        sys.path.insert(0, f'{sysconfig.get_python_lib()}/rteval')
 
         # Initialise the report module
         rtevalReport.__init__(self, self.__version,
@@ -110,8 +110,7 @@ class RtEval(rtevalReport):
             self.__xmlrpc = rtevalXMLRPC(self.__rtevcfg.xmlrpc, self.__logger, self.__mailer)
             if not self.__xmlrpc.Ping():
                 if not self.__rtevcfg.xmlrpc_noabort:
-                    print("ERROR: Could not reach XML-RPC server '%s'.  Aborting." % \
-                        self.__rtevcfg.xmlrpc)
+                    print(f"ERROR: Could not reach XML-RPC server '{self.__rtevcfg.xmlrpc}'.  Aborting.")
                     sys.exit(2)
                 else:
                     print("WARNING: Could not ping the XML-RPC server.  Will continue anyway.")
@@ -174,8 +173,7 @@ class RtEval(rtevalReport):
 
         measure_start = None
         (with_loads, run_parallel) = measure_profile.GetProfile()
-        self.__logger.log(Log.INFO, "Using measurement profile [loads: %s  parallel: %s]" % (
-            with_loads, run_parallel))
+        self.__logger.log(Log.INFO, f"Using measurement profile [loads: {with_loads}  parallel: {run_parallel}]")
         try:
             nthreads = 0
 
@@ -183,23 +181,23 @@ class RtEval(rtevalReport):
             if with_loads:
                 self._loadmods.Start()
 
-            print("rteval run on %s started at %s" % (os.uname()[2], time.asctime()))
+            print(f"rteval run on {os.uname()[2]} started at {time.asctime()}")
             onlinecpus = self._sysinfo.cpu_getCores(True)
             cpulist = self._loadmods._cfg.GetSection("loads").cpulist
             if cpulist:
-                print("started %d loads on cores %s" % (self._loadmods.ModulesLoaded(), cpulist), end=' ')
+                print(f"started {self._loadmods.ModulesLoaded()} loads on cores {cpulist}", end=' ')
             else:
-                print("started %d loads on %d cores" % (self._loadmods.ModulesLoaded(), onlinecpus), end=' ')
+                print(f"started {self._loadmods.ModulesLoaded()} loads on {onlinecpus} cores", end=' ')
             if self._sysinfo.mem_get_numa_nodes() > 1:
-                print(" with %d numa nodes" % self._sysinfo.mem_get_numa_nodes())
+                print(f" with {self._sysinfo.mem_get_numa_nodes()} numa nodes")
             else:
                 print("")
             cpulist = self._measuremods._MeasurementModules__cfg.GetSection("measurement").cpulist
             if cpulist:
-                print("started measurement threads on cores %s" % cpulist)
+                print(f"started measurement threads on cores {cpulist}")
             else:
-                print("started measurement threads on %d cores" % onlinecpus)
-            print("Run duration: %s seconds" % str(self.__rtevcfg.duration))
+                print(f"started measurement threads on {onlinecpus} cores")
+            print(f"Run duration: {str(self.__rtevcfg.duration)} seconds")
 
             # start the cyclictest thread
             measure_profile.Start()
@@ -219,7 +217,7 @@ class RtEval(rtevalReport):
             # wait for time to expire or thread to die
             signal.signal(signal.SIGINT, sig_handler)
             signal.signal(signal.SIGTERM, sig_handler)
-            self.__logger.log(Log.INFO, "waiting for duration (%s)" % str(self.__rtevcfg.duration))
+            self.__logger.log(Log.INFO, f"waiting for duration ({str(self.__rtevcfg.duration)})")
             stoptime = (time.time() + float(self.__rtevcfg.duration))
             currtime = time.time()
             rpttime = currtime + report_interval
@@ -246,7 +244,7 @@ class RtEval(rtevalReport):
                     left_to_run = stoptime - currtime
                     self.__show_remaining_time(left_to_run)
                     rpttime = currtime + report_interval
-                    print("load average: %.2f" % self._loadmods.GetLoadAvg())
+                    print(f"load average: {self._loadmods.GetLoadAvg():.2f}")
                 currtime = time.time()
 
             self.__logger.log(Log.DEBUG, "out of measurement loop")
@@ -265,7 +263,7 @@ class RtEval(rtevalReport):
             if with_loads:
                 self._loadmods.Stop()
 
-        print("stopping run at %s" % time.asctime())
+        print(f"stopping run at {time.asctime()}")
 
         # wait for measurement modules to finish calculating stats
         measure_profile.WaitForCompletion()
