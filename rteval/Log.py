@@ -60,10 +60,7 @@ class Log:
 
     def log(self, logtype, msg):
         if (logtype & self.__logverb) or logtype == self.ALWAYS:
-            self.__logfile.write("%s%s\n" %
-                                 (self.__logtype_str(logtype),
-                                  msg)
-                                 )
+            self.__logfile.write(f"{self.__logtype_str(logtype)}{msg}\n")
 
 
 
@@ -80,8 +77,8 @@ def unit_test(rootdir):
     def run_log_test(l):
         for lt in range(min(logtypes), max(logtypes)*2):
             test = ", ".join([logtypes_s[logtypes.index(i)] for i in [p for p in takewhile(lambda x: x <= lt, (2**i for i in count())) if p & lt]])
-            print("Testing verbosity flags set to: (%i) %s" % (lt, test))
-            msg = "Log entry when verbosity is set to %i [%s]" % (lt, test)
+            print(f"Testing verbosity flags set to: ({lt}) {test}")
+            msg = f"Log entry when verbosity is set to {lt} [{test}]"
             l.SetLogVerbosity(lt)
             test_log(l, msg)
             print("-"*20)
