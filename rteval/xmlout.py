@@ -67,7 +67,7 @@ class XMLOut:
 
     def __del__(self):
         if self.level > 0:
-            raise RuntimeError("XMLOut: open blocks at __del__ (last opened '%s')" % self.currtag.name)
+            raise RuntimeError(f"XMLOut: open blocks at __del__ (last opened '{self.currtag.name}')")
         if self.xmldoc is not None:
             self.xmldoc.freeDoc()
 
@@ -131,7 +131,7 @@ class XMLOut:
                     self.__parseToXML(n, v)
                     node.addChild(n)
         else:
-            raise TypeError("unhandled type (%s) for value '%s'" % (type(data), str(data)))
+            raise TypeError(f"unhandled type ({str(type(data))}) for value '{str(data)}'")
 
     def close(self):
         if self.status == 0:
@@ -139,7 +139,7 @@ class XMLOut:
         if self.status == 3:
             raise RuntimeError("XMLOut: XML document already closed")
         if self.level > 0:
-            raise RuntimeError("XMLOut: open blocks at close() (last opened '%s')" % self.currtag.name)
+            raise RuntimeError(f"XMLOut: open blocks at close() (last opened '{self.currtag.name}')")
 
         if self.status == 1: # Only set the root node in the doc on created reports (NewReport called)
             self.xmldoc.setRootElement(self.xmlroot)
@@ -172,7 +172,7 @@ class XMLOut:
         root = self.xmldoc.children
         if root.name != self.roottag:
             self.status = 3
-            raise RuntimeError("XMLOut: Loaded report is not a valid %s XML file" % self.roottag)
+            raise RuntimeError(f"XMLOut: Loaded report is not a valid {self.roottag} XML file")
 
         if validate_version is True:
             ver = root.hasProp('version')
@@ -183,7 +183,7 @@ class XMLOut:
 
             if ver.getContent() != self.version:
                 self.status = 3
-                raise RuntimeError("XMLOut: Loaded report is not of version %s" % self.version)
+                raise RuntimeError(f"XMLOut: Loaded report is not of version {self.version}")
 
         self.status = 2 # Confirm that we have loaded a report from file
 
