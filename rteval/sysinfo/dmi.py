@@ -79,6 +79,7 @@ class DMIinfo:
 
     def __init__(self, logger=None):
         self.__version = '0.6'
+        self._log = logger
 
         if not dmidecode_avail:
             logger.log(Log.DEBUG, "DMI info unavailable, ignoring DMI tables")
@@ -115,7 +116,18 @@ class DMIinfo:
             rep_n.newProp("not_available", "1")
         else:
             self.__dmixml.SetResultType(dmidecode.DMIXML_DOC)
-            dmiqry = xmlout.convert_libxml2_to_lxml_doc(self.__dmixml.QuerySection('all'))
+            try:
+                dmiqry = xmlout.convert_libxml2_to_lxml_doc(self.__dmixml.QuerySection('all'))
+            except Exception as ex1:
+                self._log.log(Log.DEBUG, f'** EXCEPTION {str(ex1)}, will query BIOS only')
+                try:
+                    # If we can't query 'all', at least query 'bios'
+                    dmiqry = xmlout.convert_libxml2_to_lxml_doc(self.__dmixml.QuerySection('bios'))
+                except Exception as ex2:
+                    rep_n.addContent("No DMI tables available")
+                    rep_n.newProp("not_available", "1")
+                    self._log.log(Log.DEBUG, f'** EXCEPTION {str(ex2)}, dmi info will not be reported')
+                    return rep_n
             resdoc = self.__xsltparser(dmiqry)
             dmi_n = xmlout.convert_lxml_to_libxml2_nodes(resdoc.getroot())
             rep_n.addChild(dmi_n)
