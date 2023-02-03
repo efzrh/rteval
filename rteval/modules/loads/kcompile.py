@@ -38,7 +38,7 @@ from rteval.systopology import CpuList, SysTopology
 expand_cpulist = CpuList.expand_cpulist
 compress_cpulist = CpuList.compress_cpulist
 
-DEFAULT_KERNEL_PREFIX = "linux-5.18"
+DEFAULT_KERNEL_PREFIX = "linux-6.1"
 
 class KBuildJob:
     '''Class to manage a build job bound to a particular node'''
@@ -349,7 +349,7 @@ class Kcompile(CommandLineLoad):
 
 def ModuleParameters():
     return {"source":   {"descr": "Source tar ball",
-                         "default": "linux-5.18.1.tar.xz",
+                         "default": "linux-6.1.8.tar.xz",
                          "metavar": "TARBALL"},
             "jobspercore": {"descr": "Number of working threads per core",
                             "default": 2,
