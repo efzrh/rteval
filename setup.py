@@ -1,12 +1,18 @@
 #!/usr/bin/python3
-from distutils.sysconfig import get_python_lib
-from distutils.core import setup
-from os.path import isfile, join
-import glob, os, shutil, gzip
+""" install rteval """
+import sysconfig
+from os.path import relpath
+import os
+import shutil
+import gzip
+from setuptools import setup
 
 
 # Get PYTHONLIB with no prefix so --prefix installs work.
-PYTHONLIB = join(get_python_lib(standard_lib=1, prefix=''), 'site-packages')
+SCHEME = 'rpm_prefix'
+if SCHEME not in sysconfig.get_scheme_names():
+    SCHEME = 'posix_prefix'
+PYTHONLIB = relpath(sysconfig.get_path('platlib', SCHEME), '/usr')
 
 # Tiny hack to make rteval-cmd become a rteval when building/installing the package
 try:
@@ -28,19 +34,18 @@ from dist import RTEVAL_VERSION
 
 # Compress the man page, so distutil will only care for the compressed file
 mangz = gzip.GzipFile('dist/rteval.8.gz', 'w', 9)
-man = open('doc/rteval.8', 'rb')
-mangz.writelines(man)
-man.close()
+with open('doc/rteval.8', 'rb') as man:
+    mangz.writelines(man)
 mangz.close()
 
 
-# Do the distutils stuff
+# Do the setup stuff
 setup(name="rteval",
       version = RTEVAL_VERSION,
       description = "Evaluate system performance for Realtime",
       author = "Clark Williams, David Sommerseth",
       author_email = "williams@redhat.com, davids@redhat.com",
-      url = "https://git.kernel.org/?p=linux/kernel/git/clrkwllms/rteval.git;a=summary",
+      url = "https://git.kernel.org/pub/scm/utils/rteval/rteval.git",
       license = "GPLv2",
       long_description =
 """\
@@ -79,8 +84,6 @@ mean, variance and standard deviation) and a report is generated.
 os.unlink('dist/rteval')
 os.unlink('dist/rteval.8.gz')
 os.unlink('dist/__init__.py')
-# TODO FIX THIS, or at least find out why it was there
-#os.unlink('dist/__init__.pyc')
 
 if distcreated:
     try:
