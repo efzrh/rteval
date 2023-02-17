@@ -37,7 +37,7 @@ import sys
 import threading
 import time
 from datetime import datetime
-from distutils import sysconfig
+import sysconfig
 from rteval.modules.loads import LoadModules
 from rteval.modules.measurement import MeasurementModules, MeasurementProfile
 from rteval.rtevalReport import rtevalReport
@@ -99,7 +99,12 @@ class RtEval(rtevalReport):
             raise RuntimeError(f"can't find XSL template ({self.__rtevcfg.xslt_report})!")
 
         # Add rteval directory into module search path
-        sys.path.insert(0, f'{sysconfig.get_python_lib()}/rteval')
+        scheme = 'rpm_prefix'
+        if scheme not in sysconfig.get_scheme_names():
+            scheme = 'posix_prefix'
+        pypath = f"{sysconfig.get_path('platlib', scheme)}/rteval"
+        sys.path.insert(0, pypath)
+        self.__logger.log(Log.DEBUG, f"Adding {pypath} to search path")
 
         # Initialise the report module
         rtevalReport.__init__(self, self.__version,
