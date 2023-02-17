@@ -23,4 +23,4 @@
 #   are deemed to be part of the source code.
 #
 
-RTEVAL_VERSION = '3.5'
+RTEVAL_VERSION = '3.6'
