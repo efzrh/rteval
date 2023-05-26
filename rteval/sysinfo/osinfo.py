@@ -122,7 +122,7 @@ def unit_test(rootdir):
 
         print("Testing OSInfo::copy_dmesg('/tmp'): ", end=' ')
         osi.copy_dmesg('/tmp')
-        if os.path.isfile("/tmp/dmesg"):
+        if os.path.isfile("/tmp/dmesg") and os.path.isfile("/var/log/dmesg"):
             md5orig = subprocess.check_output(("md5sum", "/var/log/dmesg"))
             md5copy = subprocess.check_output(("md5sum", "/tmp/dmesg"))
             if md5orig.split(" ")[0] == md5copy.split(" ")[0]:
