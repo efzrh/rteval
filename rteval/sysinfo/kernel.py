@@ -47,8 +47,8 @@ class KernelInfo:
         policies = {'DLN': 'deadline', 'FF':'fifo', 'RR':'rrobin', 'TS':'other', '?':'unknown'}
         ret_kthreads = {}
         self.__log(Log.DEBUG, "getting kthread status")
-        cmd = '%s -eocommand,pid,policy,rtprio,comm' % getcmdpath('ps')
-        self.__log(Log.DEBUG, "cmd: %s" % cmd)
+        cmd = f"{getcmdpath('ps')} -eocommand,pid,policy,rtprio,comm"
+        self.__log(Log.DEBUG, f"cmd: {cmd}")
         c = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
         for p in c.stdout:
             v = p.strip().split()
