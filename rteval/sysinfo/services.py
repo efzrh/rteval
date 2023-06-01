@@ -55,17 +55,17 @@ class SystemServices:
                 break
         if not servicesdir:
             raise RuntimeError("No services dir (init.d) found on your system")
-        self.__log(Log.DEBUG, "Services located in %s, going through each service file to check status" % servicesdir)
+        self.__log(Log.DEBUG, f"Services located in {servicesdir}, going through each service file to check status")
         ret_services = {}
         for service in glob.glob(os.path.join(servicesdir, '*')):
             servicename = os.path.basename(service)
             if not [1 for p in reject if fnmatch.fnmatch(servicename, p)] \
                     and os.access(service, os.X_OK):
-                cmd = '%s -qs "\(^\|\W\)status)" %s' % (getcmdpath('grep'), service)
+                cmd = f'{getcmdpath("grep")} -qs "\(^\|\W\)status)" {service}'
                 c = subprocess.Popen(cmd, shell=True, encoding='utf-8')
                 c.wait()
                 if c.returncode == 0:
-                    cmd = ['env', '-i', 'LANG="%s"' % os.environ['LANG'], 'PATH="%s"' % os.environ['PATH'], 'TERM="%s"' % os.environ['TERM'], service, 'status']
+                    cmd = ['env', '-i', f'LANG="{os.environ["LANG"]}"', f'PATH="{os.environ["PATH"]}"', f'TERM="{os.environ["TERM"]}"', service, 'status']
                     c = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
                     c.wait()
                     if c.returncode == 0 and (c.stdout.read() or c.stderr.read()):
@@ -79,8 +79,8 @@ class SystemServices:
 
     def __get_services_systemd(self):
         ret_services = {}
-        cmd = '%s list-unit-files -t service --no-legend' % getcmdpath('systemctl')
-        self.__log(Log.DEBUG, "cmd: %s" % cmd)
+        cmd = f'{getcmdpath("systemctl")} list-unit-files -t service --no-legend'
+        self.__log(Log.DEBUG, f"cmd: {cmd}")
         c = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
         for p in c.stdout:
             # p are lines like b'servicename.service status'
@@ -133,7 +133,7 @@ def unit_test(rootdir):
 
         return 0
     except Exception as err:
-        print("** EXCEPTION: %s" % str(err))
+        print(f"** EXCEPTION: {str(err)}")
         return 1
 
 
