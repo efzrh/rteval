@@ -55,9 +55,9 @@ class OSInfo:
             shutil.copyfile(dpath, os.path.join(repdir, "dmesg"))
             return
         if os.path.exists('/usr/bin/dmesg'):
-            subprocess.call('/usr/bin/dmesg > %s' % os.path.join(repdir, "dmesg"), shell=True)
+            subprocess.call(f'/usr/bin/dmesg > {os.path.join(repdir, "dmesg")}', shell=True)
             return
-        print("dmesg file not found at %s and no dmesg exe found!" % dpath)
+        print(f"dmesg file not found at {dpath} and no dmesg exe found!")
 
 
 
@@ -69,16 +69,16 @@ class OSInfo:
         else:
             raise RuntimeError("Can't find sosreport/sysreport")
 
-        self.__logger.log(Log.DEBUG, "report tool: %s" % exe)
+        self.__logger.log(Log.DEBUG, f"report tool: {exe}")
         options = ['-k', 'rpm.rpmva=off',
                    '--name=rteval',
                    '--batch']
 
         self.__logger.log(Log.INFO, "Generating SOS report")
-        self.__logger.log(Log.INFO, "using command %s" % " ".join([exe]+options))
+        self.__logger.log(Log.INFO, f"using command {' '.join([exe]+options)}")
         subprocess.call([exe] + options)
         for s in glob('/tmp/s?sreport-rteval-*'):
-            self.__logger.log(Log.DEBUG, "moving %s to %s" % (s, repdir))
+            self.__logger.log(Log.DEBUG, f"moving {s} to {repdir}")
             shutil.move(s, repdir)
 
 
@@ -118,7 +118,7 @@ def unit_test(rootdir):
         log = Log()
         log.SetLogVerbosity(Log.DEBUG|Log.INFO)
         osi = OSInfo(logger=log)
-        print("Base OS: %s" % osi.get_base_os())
+        print(f"Base OS: {osi.get_base_os()}")
 
         print("Testing OSInfo::copy_dmesg('/tmp'): ", end=' ')
         osi.copy_dmesg('/tmp')
