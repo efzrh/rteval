@@ -49,7 +49,7 @@ class MemoryInfo:
             if l.startswith('MemTotal:'):
                 parts = l.split()
                 if parts[2].lower() != 'kb':
-                    raise RuntimeError("Units changed from kB! (%s)" % parts[2])
+                    raise RuntimeError(f"Units changed from kB! ({parts[2]})")
                 rawsize = int(parts[1])
                 f.close()
                 break
@@ -76,7 +76,7 @@ class MemoryInfo:
 
         memsize = self.mem_get_size()
         mem_n = libxml2.newNode("memory_size")
-        mem_n.addContent("%.3f" % memsize[0])
+        mem_n.addContent(f"{memsize[0]:.3f}")
         mem_n.newProp("unit", memsize[1])
         rep_n.addChild(mem_n)
 
@@ -88,8 +88,8 @@ def unit_test(rootdir):
     import sys
     try:
         mi = MemoryInfo()
-        print("Numa nodes: %i" % mi.mem_get_numa_nodes())
-        print("Memory: %i %s" % mi.mem_get_size())
+        print(f"Numa nodes: {mi.mem_get_numa_nodes()}")
+        print(f"Memory: {int(mi.mem_get_size()[0])} {mi.mem_get_size()[1]}")
     except Exception as e:
         import traceback
         traceback.print_exc(file=sys.stdout)
