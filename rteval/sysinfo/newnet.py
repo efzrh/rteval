@@ -72,19 +72,23 @@ class IPv6Addresses():
             and a list of ipv6addresses
         '''
         MYP = '/proc/net/if_inet6'
-        with open(MYP, 'r') as f:
-            mystr = f.readline().strip()
-            while len(mystr) > 0:
-                ipv6addr , _, _, _, _, intf = mystr.split()
-                ipv6addr = compress_iv6(ipv6addr)
-                if intf == 'lo':
-                    mystr = f.readline().strip()
-                    continue
-                if intf not in self.data:
-                    self.data[intf] = [ipv6addr]
-                else:
-                    self.data[intf].append(ipv6addr)
+        try:
+            with open(MYP, 'r') as f:
                 mystr = f.readline().strip()
+                while len(mystr) > 0:
+                    ipv6addr , _, _, _, _, intf = mystr.split()
+                    ipv6addr = compress_iv6(ipv6addr)
+                    if intf == 'lo':
+                        mystr = f.readline().strip()
+                        continue
+                    if intf not in self.data:
+                        self.data[intf] = [ipv6addr]
+                    else:
+                        self.data[intf].append(ipv6addr)
+                    mystr = f.readline().strip()
+        # if IPv6 is disabled, the if_net6 files does not exist, so we can pass
+        except FileNotFoundError:
+            pass
 
 class IPv4Addresses():
     ''' Obtains a list of IPv4 addresses from the proc file system '''
