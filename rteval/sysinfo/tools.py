@@ -40,5 +40,5 @@ def getcmdpath(which):
                 pathSave[which] = cmdfile
                 break
         if not pathSave[which]:
-            raise RuntimeError("Command '%s' is unknown on this system" % which)
+            raise RuntimeError(f"Command '{which}' is unknown on this system")
     return pathSave[which]
