@@ -61,7 +61,7 @@ class rtevalclient:
         cmpr = compr.compress(fbuf.getvalue())
         data = base64.b64encode(cmpr + compr.flush())
         ret = self.srv.SendReport(self.hostname, data)
-        print("rtevalclient::SendReport() - Sent %i bytes (XML document length: %i bytes, compression ratio: %.02f%%)" % (len(data), doclen, (1-(float(len(data)) / float(doclen)))*100 ))
+        print(f"rtevalclient::SendReport() - Sent {len(data)} bytes (XML document length: {doclen} bytes, compression ratio: {(1-(float(len(data)) / float(doclen)))*100}:.2f)")
         return ret
 
     def SendDataAsFile(self, fname, data, decompr = False):
