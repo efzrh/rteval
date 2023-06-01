@@ -124,9 +124,7 @@ def unit_test(rootdir):
         x.saveFormatFileEnc('-', 'UTF-8', 1)
 
         print(" ---- getCPUcores() / getCPUscokets() ---- ")
-        print("CPU cores: %i (online: %i) - CPU sockets: %i" % (cputop.cpu_getCores(False),
-                                                                cputop.cpu_getCores(True),
-                                                                cputop.cpu_getSockets()))
+        print(f"CPU cores: {cputop.cpu_getCores(False)} (online: {cputop.cpu_getCores(True)}) - CPU sockets: {cputop.cpu_getSockets()}")
         return 0
     except Exception as e:
         # import traceback
