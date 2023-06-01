@@ -115,7 +115,7 @@ class rtevalCfgSection:
         "Simple method for dumping config when object is used as a string"
         if not self.__cfgdata:
             return "# empty"
-        return "\n".join(["%s: %s" % (k, v) for k, v in list(self.__cfgdata.items())]) + "\n"
+        return "\n".join([f"{k}: {v}" for k, v in list(self.__cfgdata.items())]) + "\n"
 
 
     def __setattr__(self, key, val):
