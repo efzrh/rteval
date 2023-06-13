@@ -62,12 +62,14 @@ class OSInfo:
 
 
     def run_sysreport(self, repdir):
-        if os.path.exists('/usr/sbin/sosreport'):
+        if os.path.exists('/usr/sbin/sos'):
+            exe = '/usr/sbin/sos report'
+        elif os.path.exists('/usr/sbin/sosreport'):
             exe = '/usr/sbin/sosreport'
         elif os.path.exists('/usr/sbin/sysreport'):
             exe = '/usr/sbin/sysreport'
         else:
-            raise RuntimeError("Can't find sosreport/sysreport")
+            raise RuntimeError("Can't find sos/sosreport/sysreport")
 
         self.__logger.log(Log.DEBUG, f"report tool: {exe}")
         options = ['-k', 'rpm.rpmva=off',
@@ -75,8 +77,8 @@ class OSInfo:
                    '--batch']
 
         self.__logger.log(Log.INFO, "Generating SOS report")
-        self.__logger.log(Log.INFO, f"using command {' '.join([exe]+options)}")
-        subprocess.call([exe] + options)
+        self.__logger.log(Log.INFO, f"using command {' '.join(exe.split()+options)}")
+        subprocess.call(exe.split() + options)
         for s in glob('/tmp/s?sreport-rteval-*'):
             self.__logger.log(Log.DEBUG, f"moving {s} to {repdir}")
             shutil.move(s, repdir)
