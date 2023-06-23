@@ -31,6 +31,7 @@ import signal
 from xmlrpc.server import SimpleXMLRPCServer
 from xmlrpc.server import SimpleXMLRPCRequestHandler
 from optparse import OptionParser
+import argparse
 
 import xmlrpc_API1
 from Logger import Logger
@@ -110,16 +111,16 @@ rtevalserver = None
 #
 
 if __name__ == '__main__':
-    parser = OptionParser(version="%prog v0.1")
+    parser = argparse.ArgumentParser(version="%prog v0.1")
 
-    parser.add_option("-L", "--listen", action="store", dest="listen", default=LISTEN,
+    parser.add_argument("-L", "--listen", action="store", dest="listen", default=LISTEN,
                       help="Which interface to listen to [default: %default]", metavar="IPADDR")
-    parser.add_option("-P", "--port", action="store", type="int", dest="port", default=PORT,
+    parser.add_argument("-P", "--port", action="store", type="int", dest="port", default=PORT,
                       help="Which port to listen to [default: %default]",  metavar="PORT")
-    parser.add_option("-l", "--log", action="store", dest="logfile", default=None,
+    parser.add_argument("-l", "--log", action="store", dest="logfile", default=None,
                       help="Where to log requests.", metavar="FILE")
 
-    (options, args) = parser.parse_args()
+    options = parser.parse_args()
 
     logger = Logger(options.logfile, "RTeval")
     rtevalserver = RTevald(options, logger)

@@ -1,5 +1,5 @@
 import sys, threading, time, signal, libxml2
-from optparse import OptionParser
+import argparse
 from rteval_testserver import RTevald
 from Logger import Logger
 
@@ -14,10 +14,10 @@ class ServerThread(threading.Thread):
         self.port = port
         self.log = Logger('unit-test-server.log','rteval-xmlrpc-testsrv')
 
-        parser = OptionParser()
-        parser.add_option("-L", "--listen", action="store", dest="listen", default="127.0.0.1",
+        parser = argparse.ArgumentParser()
+        parser.add_argument("-L", "--listen", action="store", dest="listen", default="127.0.0.1",
                           help="Which interface to listen to [default: %default]", metavar="IPADDR")
-        parser.add_option("-P", "--port", action="store", type="int", dest="port", default=self.port,
+        parser.add_argument("-P", "--port", action="store", type="int", dest="port", default=self.port,
                           help="Which port to listen to [default: %default]",  metavar="PORT")
 
         (options, args) = parser.parse_args()

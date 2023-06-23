@@ -286,11 +286,11 @@ class rtevalConfig:
         return self.__config_files.__contains__(fname)
 
 
-    def UpdateFromOptionParser(self, parser):
+    def UpdateFromOptionParser(self, cmd_opts):
         "Parse through the command line options and update the appropriate config settings"
 
         last_sect = None
-        for sk, v in sorted(vars(parser.values).items()):
+        for sk, v in sorted(vars(cmd_opts).items()):
             # optparse key template: {sectionname}___{key}
             k = sk.split('___')
             if k[0] != last_sect:

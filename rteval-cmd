@@ -40,7 +40,7 @@ import os
 import time
 import re
 import shutil
-import optparse
+import argparse
 import tempfile
 import requests
 import lxml.etree
@@ -115,66 +115,84 @@ def parse_options(cfg, parser, cmdargs):
     # thus they are prefixed with 'rteval___'.
     # See rteval/rtevalConfig::UpdateFromOptionParser() method for more info
     #
-    parser.add_option("-d", "--duration", dest="rteval___duration",
-                      type="string", default=rtevcfg.duration, metavar="DURATION",
-                      help="specify length of test run (default: %default)")
-    parser.add_option("-v", "--verbose", dest="rteval___verbose",
+    parser.add_argument("-d", "--duration", dest="rteval___duration",
+                      type=str, default=rtevcfg.duration, metavar="DURATION",
+                      help=f"specify length of test run (default: {rtevcfg.duration})")
+    parser.add_argument("-v", "--verbose", dest="rteval___verbose",
                       action="store_true", default=rtevcfg.verbose,
-                      help="turn on verbose prints (default: %default)")
-    parser.add_option("-q", "--quiet", dest="rteval___quiet",
+                      help=f"turn on verbose prints (default: {rtevcfg.verbose})")
+    parser.add_argument("-q", "--quiet", dest="rteval___quiet",
                       action="store_true", default=rtevcfg.quiet,
-                      help="turn on quiet mode (default: %default)")
-    parser.add_option("-w", "--workdir", dest="rteval___workdir",
-                      type="string", default=rtevcfg.workdir, metavar="DIRECTORY",
-                      help="top directory for rteval data (default: %default)")
-    parser.add_option("-l", "--loaddir", dest="rteval___srcdir",
-                      type="string", default=rtevcfg.srcdir, metavar="DIRECTORY",
-                      help="directory for load source tarballs (default: %default)")
-    parser.add_option("-i", "--installdir", dest="rteval___installdir",
-                      type="string", default=rtevcfg.installdir, metavar="DIRECTORY",
-                      help="place to locate installed templates (default: %default)")
-    parser.add_option("-s", "--sysreport", dest="rteval___sysreport",
+                      help=f"turn on quiet mode (default: {rtevcfg.quiet})")
+    parser.add_argument("-w", "--workdir", dest="rteval___workdir",
+                      type=str, default=rtevcfg.workdir, metavar="DIRECTORY",
+                      help=f"top directory for rteval data (default: {rtevcfg.workdir})")
+    parser.add_argument("-l", "--loaddir", dest="rteval___srcdir",
+                      type=str, default=rtevcfg.srcdir, metavar="DIRECTORY",
+                      help=f"directory for load source tarballs (default: {rtevcfg.srcdir})")
+    parser.add_argument("-i", "--installdir", dest="rteval___installdir",
+                      type=str, default=rtevcfg.installdir, metavar="DIRECTORY",
+                      help=f"place to locate installed templates (default: {rtevcfg.installdir})")
+    parser.add_argument("-s", "--sysreport", dest="rteval___sysreport",
                       action="store_true", default=rtevcfg.sysreport,
-                      help='run sysreport to collect system data (default: %default)')
-    parser.add_option("-D", '--debug', dest='rteval___debugging',
+                      help=f'run sysreport to collect system data (default: {rtevcfg.sysreport})')
+    parser.add_argument("-D", '--debug', dest='rteval___debugging',
                       action='store_true', default=rtevcfg.debugging,
-                      help='turn on debug prints (default: %default)')
+                      help=f'turn on debug prints (default: {rtevcfg.debugging})')
     #parser.add_option("-X", '--xmlrpc-submit', dest='rteval___xmlrpc',
     #                  action='store', default=rtevcfg.xmlrpc, metavar='HOST',
     #                  help='Hostname to XML-RPC server to submit reports')
     #parser.add_option("-P", "--xmlrpc-no-abort", dest="rteval___xmlrpc_noabort",
     #                  action='store_true', default=False,
     #                  help="Do not abort if XML-RPC server do not respond to ping request");
-    parser.add_option("-Z", '--summarize', dest='rteval___summarize',
+    parser.add_argument("-Z", '--summarize', dest='rteval___summarize',
                       action='store_true', default=False,
                       help='summarize an already existing XML report')
-    parser.add_option("-H", '--raw-histogram', dest='rteval___rawhistogram',
+    parser.add_argument("-H", '--raw-histogram', dest='rteval___rawhistogram',
                       action='store_true', default=False,
                       help='Generate raw histogram data for an already existing XML report')
-    parser.add_option("-f", "--inifile", dest="rteval___inifile",
-                      type='string', default=None, metavar="FILE",
+    parser.add_argument("-f", "--inifile", dest="rteval___inifile",
+                      type=str, default=None, metavar="FILE",
                       help="initialization file for configuring loads and behavior")
-    parser.add_option("-a", "--annotate", dest="rteval___annotate",
-                      type="string", default=None, metavar="STRING",
+    parser.add_argument("-a", "--annotate", dest="rteval___annotate",
+                      type=str, default=None, metavar="STRING",
                       help="Add a little annotation which is stored in the report")
-    parser.add_option("-L", "--logging", dest="rteval___logging",
+    parser.add_argument("-L", "--logging", dest="rteval___logging",
                       action='store_true', default=False,
                       help='log the output of the loads in the report directory')
-    parser.add_option("-O", "--onlyload", dest="rteval___onlyload",
+    parser.add_argument("-O", "--onlyload", dest="rteval___onlyload",
                       action='store_true', default=False,
                       help="only run the loads (don't run measurement threads)")
-    parser.add_option("-V", "--version", dest="rteval___version",
+    parser.add_argument("-V", "--version", dest="rteval___version",
                       action='store_true', default=False,
                       help='print rteval version and exit')
-    parser.add_option("-S", "--source-download", dest="rteval___srcdownload",
-                        type="string", default=None, metavar="KERNEL_VERSION",
+    parser.add_argument("-S", "--source-download", dest="rteval___srcdownload",
+                        type=str, default=None, metavar="KERNEL_VERSION",
                         help='download a source kernel from kernel.org and exit')
 
 
     if not cmdargs:
         cmdargs = ["--help"]
 
-    (cmd_opts, cmd_args) = parser.parse_args(args=cmdargs)
+    # if -Z/--summarize is specified, add the files to be summarized to cmd_args, and add -Z to cmd_opts
+    cmd_args = []
+    if (sys.argv.count('-Z')+sys.argv.count('--summarize')) > 0:
+        try:
+            ind = cmdargs.index('-Z')
+        except ValueError:
+            ind = cmdargs.index('--summarize')
+        cmd_args = cmdargs[ind+1:]
+        cmdargs = cmdargs[:ind+1]
+    # if -H/--raw-histogram is specified, add the files to be summarized to cmd_args, and add -Z to cmd_opts
+    elif (sys.argv.count('-H')+sys.argv.count('--raw-histogram')) > 0:
+        try:
+            ind = cmdargs.index('-H')
+        except ValueError:
+            ind = cmdargs.index('--raw-histogram')
+        cmd_args = cmdargs[ind+1:]
+        cmdargs = cmdargs[:ind+1]
+    cmd_opts = parser.parse_args(args=cmdargs)
+
     if cmd_opts.rteval___version:
         print(f"rteval version {RTEVAL_VERSION}")
         sys.exit(0)
@@ -196,7 +214,7 @@ def parse_options(cfg, parser, cmdargs):
         cmd_opts.rteval___duration = float(v) * mult
 
     # Update the config object with the parsed arguments
-    cfg.UpdateFromOptionParser(parser)
+    cfg.UpdateFromOptionParser(cmd_opts)
 
     return cmd_args
 
@@ -266,7 +284,7 @@ if __name__ == '__main__':
         measuremods = MeasurementModules(config, logger=logger)
 
         # parse command line options
-        parser = optparse.OptionParser()
+        parser = argparse.ArgumentParser()
         loadmods.SetupModuleOptions(parser)
         measuremods.SetupModuleOptions(parser)
         cmd_args = parse_options(config, parser, sys.argv[1:])

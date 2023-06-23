@@ -25,7 +25,7 @@
 import time
 from datetime import datetime
 import threading
-import optparse
+import argparse
 import libxml2
 from rteval.Log import Log
 from rteval.rtevalConfig import rtevalCfgSection
@@ -294,12 +294,11 @@ the information provided by the module"""
     def SetupModuleOptions(self, parser, config):
         """Sets up a separate optptarse OptionGroup per module with its supported parameters"""
 
-        grparser = optparse.OptionGroup(parser, "Group Options for %s modules" % self.__modtype)
-        grparser.add_option('--%s-cpulist' % self.__modtype,
+        grparser = parser.add_argument_group("Group Options for %s modules" % self.__modtype)
+        grparser.add_argument('--%s-cpulist' % self.__modtype,
                             dest='%s___cpulist' % self.__modtype, action='store', default="",
                             help='CPU list where %s modules will run' % self.__modtype,
                             metavar='LIST')
-        parser.add_option_group(grparser)
 
         for (modname, mod) in list(self.__modsloaded.items()):
             opts = mod.ModuleParameters()
@@ -313,7 +312,7 @@ the information provided by the module"""
                 # Ignore if a section is not found
                 cfg = None
 
-            grparser = optparse.OptionGroup(parser, "Options for the %s module" % shortmod)
+            grparser = parser.add_argument_group("Options for the %s module" % shortmod)
             for (o, s) in list(opts.items()):
                 descr = 'descr' in s and s['descr'] or ""
                 metavar = 'metavar' in s and s['metavar'] or None
@@ -328,14 +327,13 @@ the information provided by the module"""
                     default = 'default' in s and s['default'] or None
 
 
-                grparser.add_option('--%s-%s' % (shortmod, o),
+                grparser.add_argument('--%s-%s' % (shortmod, o),
                                     dest="%s___%s" % (shortmod, o),
                                     action='store',
                                     help='%s%s' % (descr,
                                                    default and ' (default: %s)' % default or ''),
                                     default=default,
                                     metavar=metavar)
-            parser.add_option_group(grparser)
 
 
     def InstantiateModule(self, modname, modcfg, modroot=None):
