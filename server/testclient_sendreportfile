@@ -28,22 +28,22 @@
 
 import sys
 import libxml2
-from optparse import OptionParser
+from argparse import ArgumentParser
 
 sys.path.append('../rteval')
 import rtevalclient
 
 if __name__ == '__main__':
-    parser = OptionParser(version="%prog v0.1")
+    parser = ArgumentParser(version="%prog v0.1")
 
-    parser.add_option("-r", "--report", action="store", dest="report", default="summary.xml",
+    parser.add_argument("-r", "--report", action="store", dest="report", default="summary.xml",
                       help="Which XML report to send to the XML-RPC server  (default: %default)",
                       metavar="FILE")
-    parser.add_option("-X", "--xmlrpc-submit", dest="xmlrpchost", default="localhost:65432",
+    parser.add_argument("-X", "--xmlrpc-submit", dest="xmlrpchost", default="localhost:65432",
                       help="Hostname to the XML-RPC server to send the data (default: %default)",
                       metavar="HOST[:PORT]")
 
-    (opts, args) = parser.parse_args()
+    opts = parser.parse_args()
 
     d = libxml2.parseFile(opts.report)
 

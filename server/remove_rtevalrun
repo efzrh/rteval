@@ -29,7 +29,7 @@
 
 import sys
 import getpass
-from optparse import OptionParser
+from argparse import ArgumentParser
 from database import Database
 
 def do_delete(dbc, table, rterid):
@@ -45,20 +45,20 @@ def do_delete(dbc, table, rterid):
 
 
 if __name__ == '__main__':
-    parser = OptionParser(version="%prog v0.1")
+    parser = ArgumentParser(version="%prog v0.1")
 
-    parser.add_option("-H", "--host", action="store", dest="dbhost", default="localhost",
+    parser.add_argument("-H", "--host", action="store", dest="dbhost", default="localhost",
                       help="Database server to connect to (default: %default)",
                       metavar="HOST")
-    parser.add_option("-p", "--port", action="store", dest="dbport", default="5432",
+    parser.add_argument("-p", "--port", action="store", dest="dbport", default="5432",
                       help="Database server port to use (default: %default)", metavar="PORT")
-    parser.add_option("-U", "--user", action="store", dest="dbuser", default="rtevaladmin",
+    parser.add_argument("-U", "--user", action="store", dest="dbuser", default="rtevaladmin",
                       help="Database user to connect as (default: %default)", metavar="USERNAME")
-    parser.add_option("-d", "--database", action="store", dest="dbname", default="rteval",
+    parser.add_argument("-d", "--database", action="store", dest="dbname", default="rteval",
                       help="Database to use (default: %default)", metavar="DATABASE")
-    parser.add_option("-r", "--rterid", action="store", dest="rterid", default=None,
+    parser.add_argument("-r", "--rterid", action="store", dest="rterid", default=None,
                       help="rteval run id to remove from the database", metavar="INTEGER")
-    (opts, args) = parser.parse_args()
+    opts = parser.parse_args()
 
     if opts.rterid is None:
         print "%s:  Missing --rterid value" % sys.argv[0]

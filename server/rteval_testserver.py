@@ -30,7 +30,6 @@ import sys
 import signal
 from xmlrpc.server import SimpleXMLRPCServer
 from xmlrpc.server import SimpleXMLRPCRequestHandler
-from optparse import OptionParser
 import argparse
 
 import xmlrpc_API1
