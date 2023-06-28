@@ -166,7 +166,7 @@ def parse_options(cfg, parser, cmdargs):
     parser.add_argument("-V", "--version", dest="rteval___version",
                       action='store_true', default=False,
                       help='print rteval version and exit')
-    parser.add_argument("-S", "--source-download", dest="rteval___srcdownload",
+    parser.add_argument("-S", "--source-download", nargs="*", dest="rteval___srcdownload",
                         type=str, default=None, metavar="KERNEL_VERSION",
                         help='download a source kernel from kernel.org and exit')
 
@@ -191,7 +191,15 @@ def parse_options(cfg, parser, cmdargs):
             ind = cmdargs.index('--raw-histogram')
         cmd_args = cmdargs[ind+1:]
         cmdargs = cmdargs[:ind+1]
+
     cmd_opts = parser.parse_args(args=cmdargs)
+
+    # if no kernel version was provided for --source-download, set version to default
+    if (sys.argv.count('-S')+sys.argv.count('--source-download')) > 0:
+        if cmd_opts.rteval___srcdownload == []:
+            cmd_opts.rteval___srcdownload = ModuleParameters()["source"]["default"].replace(".tar.xz", "")
+        else:
+            cmd_opts.rteval___srcdownload = cmd_opts.rteval___srcdownload[0]
 
     if cmd_opts.rteval___version:
         print(f"rteval version {RTEVAL_VERSION}")
