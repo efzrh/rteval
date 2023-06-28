@@ -291,7 +291,7 @@ class rtevalConfig:
 
         last_sect = None
         for sk, v in sorted(vars(cmd_opts).items()):
-            # optparse key template: {sectionname}___{key}
+            # argparse key template: {sectionname}___{key}
             k = sk.split('___')
             if k[0] != last_sect:
                 # If the section name changed, retrieve the section variables

@@ -183,7 +183,7 @@ def parse_options(cfg, parser, cmdargs):
             ind = cmdargs.index('--summarize')
         cmd_args = cmdargs[ind+1:]
         cmdargs = cmdargs[:ind+1]
-    # if -H/--raw-histogram is specified, add the files to be summarized to cmd_args, and add -Z to cmd_opts
+    # if -H/--raw-histogram is specified, add the files to be summarized to cmd_args, and add -H to cmd_opts
     elif (sys.argv.count('-H')+sys.argv.count('--raw-histogram')) > 0:
         try:
             ind = cmdargs.index('-H')

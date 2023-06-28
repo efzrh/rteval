@@ -292,7 +292,7 @@ the information provided by the module"""
 
 
     def SetupModuleOptions(self, parser, config):
-        """Sets up a separate optptarse OptionGroup per module with its supported parameters"""
+        """Sets up a separate argparse ArgumentGroup per module with its supported parameters"""
 
         grparser = parser.add_argument_group("Group Options for %s modules" % self.__modtype)
         grparser.add_argument('--%s-cpulist' % self.__modtype,
@@ -451,7 +451,7 @@ class RtEvalModules:
         return self.__modules.GetModulesList()
 
     def SetupModuleOptions(self, parser):
-        "Sets up optparse based option groups for the loaded modules"
+        "Sets up argparse based argument groups for the loaded modules"
         return self.__modules.SetupModuleOptions(parser, self._cfg)
 
     def GetNamedModuleObject(self, modname):
