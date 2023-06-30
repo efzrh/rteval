@@ -38,6 +38,7 @@ from rteval.Log import Log
 from rteval.systopology import CpuList, SysTopology
 
 expand_cpulist = CpuList.expand_cpulist
+isolated_cpulist = CpuList.isolated_cpulist
 
 class Hackbench(CommandLineLoad):
     def __init__(self, config, logger):
@@ -77,9 +78,12 @@ class Hackbench(CommandLineLoad):
             # if a cpulist was specified, only allow cpus in that list on the node
             if self.cpulist:
                 self.cpus[n] = [c for c in self.cpus[n] if c in expand_cpulist(self.cpulist)]
+            # if a cpulist was not specified, exclude isolated cpus
+            else:
+                self.cpus[n] = CpuList.nonisolated_cpulist(self.cpus[n])
 
             # track largest number of cpus used on a node
-            node_biggest = len(sysTop.getcpus(int(n)))
+            node_biggest = len(self.cpus[n])
             if node_biggest > biggest:
                 biggest = node_biggest
 
