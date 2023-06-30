@@ -128,6 +128,11 @@ class CpuList:
         return False
 
     @staticmethod
+    def isolated_file_exists():
+        """ Check whether machine / kernel is configured with isolated file """
+        return os.path.exists(os.path.join(CpuList.cpupath, "isolated"))
+
+    @staticmethod
     def longest_sequence(cpulist):
         """ return index of last element of a sequence that steps by one """
         lim = len(cpulist)
@@ -213,6 +218,24 @@ class CpuList:
             elif self.is_online(int(cpu)):
                 newlist.append(cpu)
         return newlist
+
+    @staticmethod
+    def isolated_cpulist(cpulist):
+        """Given a cpulist, return a cpulist of isolated CPUs"""
+        if not CpuList.isolated_file_exists():
+            return cpulist
+        isolated_cpulist = sysread(CpuList.cpupath, "isolated")
+        isolated_cpulist = CpuList.expand_cpulist(isolated_cpulist)
+        return list(set(isolated_cpulist) & set(cpulist))
+
+    @staticmethod
+    def nonisolated_cpulist(cpulist):
+        """Given a cpulist, return a cpulist of non-isolated CPUs"""
+        if not CpuList.isolated_file_exists():
+            return cpulist
+        isolated_cpulist = sysread(CpuList.cpupath, "isolated")
+        isolated_cpulist = CpuList.expand_cpulist(isolated_cpulist)
+        return list(set(cpulist).difference(set(isolated_cpulist)))
 
 #
 # class to abstract access to NUMA nodes in /sys filesystem
@@ -362,9 +385,33 @@ class SysTopology:
         cpulist.sort()
         return cpulist
 
+    def isolated_cpus(self):
+        """ return a list of integers of all isolated cpus """
+        cpulist = []
+        for n in self.nodes:
+            cpulist += CpuList.isolated_cpulist(self.getcpus(n))
+        cpulist.sort()
+        return cpulist
+
+    def default_cpus(self):
+        """ return a list of integers of all default schedulable cpus, i.e. online non-isolated cpus """
+        cpulist = []
+        for n in self.nodes:
+            cpulist += CpuList.nonisolated_cpulist(self.getcpus(n))
+        cpulist.sort()
+        return cpulist
+
     def online_cpus_str(self):
         """ return a list of strings of numbers of all online cpus """
         cpulist = [str(cpu) for cpu in self.online_cpus()]
+        return cpulist
+
+    def isolated_cpus_str(self):
+        cpulist = [str(cpu) for cpu in self.isolated_cpus()]
+        return cpulist
+
+    def default_cpus_str(self):
+        cpulist = [str(cpu) for cpu in self.default_cpus()]
         return cpulist
 
     def invert_cpulist(self, cpulist):
