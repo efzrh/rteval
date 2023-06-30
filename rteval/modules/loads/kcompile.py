@@ -175,7 +175,7 @@ class Kcompile(CommandLineLoad):
         if 'rc' in self._cfg.source:
             tarfile_prefix = re.search(r"\d{1,2}\.\d{1,3}\-[a-z]*\d{1,2}", self._cfg.source).group(0)
         else:
-            tarfile_prefix = re.search(r"\d{1,2}\.\d{1,3}\.*\d{1,2}", self._cfg.source).group(0)
+            tarfile_prefix = re.search(r"(\d{1,2}\.\d{1,3}\.\d{1,3})|(\d{1,2}\.\d{1,3})", self._cfg.source).group(0)
 
         # either a tar.xz or tar.gz might exist. Check for both.
         xz_file = os.path.join(self.srcdir,"linux-" + tarfile_prefix + ".tar.xz" )
@@ -193,7 +193,7 @@ class Kcompile(CommandLineLoad):
         # find our source tarball
         if self._cfg.source:
             self.source = self._find_tarball()
-            kernel_prefix = re.search(r"linux-\d{1,2}\.\d{1,3}\.*\d{1,2}", self.source).group(0)
+            kernel_prefix = re.search(r"(linux-\d{1,2}\.\d{1,3}\.\d{1,3})|(linux-\d{1,2}\.\d{1,3})", self.source).group(0)
         else:
             tarfiles = glob.glob(os.path.join(self.srcdir, f"{DEFAULT_KERNEL_PREFIX}*"))
             if tarfiles:
