@@ -37,6 +37,7 @@ from rteval.systopology import CpuList, SysTopology
 
 expand_cpulist = CpuList.expand_cpulist
 compress_cpulist = CpuList.compress_cpulist
+nonisolated_cpulist = CpuList.nonisolated_cpulist
 
 DEFAULT_KERNEL_PREFIX = "linux-6.1"
 
@@ -55,17 +56,20 @@ class KBuildJob:
         if not os.path.isdir(self.objdir):
             os.mkdir(self.objdir)
 
+        # Exclude isolated CPUs if cpulist not set
+        cpus_available = len(nonisolated_cpulist(self.node.cpus.cpulist))
+
         if os.path.exists('/usr/bin/numactl') and not cpulist:
             # Use numactl
             self.binder = f'numactl --cpunodebind {int(self.node)}'
-            self.jobs = self.calc_jobs_per_cpu() * len(self.node)
+            self.jobs = self.calc_jobs_per_cpu() * cpus_available
         elif cpulist:
             # Use taskset
             self.jobs = self.calc_jobs_per_cpu() * len(cpulist)
             self.binder = f'taskset -c {compress_cpulist(cpulist)}'
         else:
             # Without numactl calculate number of jobs from the node
-            self.jobs = self.calc_jobs_per_cpu() * len(self.node)
+            self.jobs = self.calc_jobs_per_cpu() * cpus_available
 
         self.runcmd = f"make O={self.objdir} -C {self.kdir} -j{self.jobs}"
         self.cleancmd = f"make O={self.objdir} -C {self.kdir} clean allmodconfig"
