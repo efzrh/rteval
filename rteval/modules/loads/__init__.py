@@ -138,7 +138,7 @@ class LoadModules(RtEvalModules):
             # Convert str to list and remove offline cpus
             cpulist = CpuList(cpulist).cpulist
         else:
-            cpulist = SysTop().online_cpus()
+            cpulist = SysTop().default_cpus()
         rep_n.newProp("loadcpus", collapse_cpulist(cpulist))
 
         return rep_n

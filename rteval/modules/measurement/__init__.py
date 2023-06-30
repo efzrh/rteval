@@ -194,7 +194,7 @@ measurement profiles, based on their characteristics"""
             # Convert str to list and remove offline cpus
             cpulist = CpuList(cpulist).cpulist
         else:
-            cpulist = SysTop().online_cpus()
+            cpulist = SysTop().default_cpus()
         rep_n.newProp("measurecpus", collapse_cpulist(cpulist))
 
         for mp in self.__measureprofiles:
