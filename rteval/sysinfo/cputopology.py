@@ -25,6 +25,7 @@
 
 import os
 import libxml2
+from rteval.systopology import SysTopology
 
 class CPUtopology:
     "Retrieves an overview over the installed CPU cores and the system topology"
@@ -34,6 +35,7 @@ class CPUtopology:
         self.__cputop_n = None
         self.__cpu_cores = 0
         self.__online_cores = 0
+        self.__isolated_cores = 0
         self.__cpu_sockets = 0
 
     def __read(self, dirname, fname):
@@ -50,6 +52,10 @@ class CPUtopology:
         "Parses the cpu topology information from /sys/devices/system/cpu/cpu*"
 
         self.__cputop_n = libxml2.newNode('CPUtopology')
+
+        # Get list of isolated CPUs from SysTopology
+        systopology = SysTopology()
+        isolated_cpus = {'cpu' + n for n in systopology.isolated_cpus_str()}
 
         cpusockets = []
         for dirname in os.listdir(self.sysdir):
@@ -82,6 +88,10 @@ class CPUtopology:
                                                       'physical_package_id')
                             cpu_n.newProp('physical_package_id', str(phys_pkg_id))
                             cpusockets.append(phys_pkg_id)
+                            is_isolated = dirname in isolated_cpus
+                            if is_isolated:
+                             self.__isolated_cores += 1
+                            cpu_n.newProp('isolated', str(int(dirname in isolated_cpus)))
                         break
 
         # Count unique CPU sockets
@@ -97,6 +107,7 @@ class CPUtopology:
         # Summarise the core counts
         self.__cputop_n.newProp('num_cpu_cores', str(self.__cpu_cores))
         self.__cputop_n.newProp('num_cpu_cores_online', str(self.__online_cores))
+        self.__cputop_n.newProp('num_cpu_cores_isolated', str(self.__isolated_cores))
         self.__cputop_n.newProp('num_cpu_sockets', str(self.__cpu_sockets))
 
         return self.__cputop_n

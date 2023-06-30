@@ -59,6 +59,10 @@
 	<xsl:value-of select="SystemInfo/CPUtopology/@num_cpu_cores"/>
 	<xsl:text> (online: </xsl:text>
 	<xsl:value-of select="SystemInfo/CPUtopology/@num_cpu_cores_online"/>
+    <xsl:if test="SystemInfo/CPUtopology/@num_cpu_cores_isolated != 0">
+      <xsl:text>, isolated: </xsl:text>
+      <xsl:value-of select="SystemInfo/CPUtopology/@num_cpu_cores_isolated"/>
+    </xsl:if>
 	<xsl:text>)</xsl:text>
       </xsl:when>
       <xsl:when test="hardware/cpu_topology">
