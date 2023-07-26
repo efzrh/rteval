@@ -407,10 +407,12 @@ class SysTopology:
         return cpulist
 
     def isolated_cpus_str(self):
+        """ return a list of strings of numbers of all isolated cpus """
         cpulist = [str(cpu) for cpu in self.isolated_cpus()]
         return cpulist
 
     def default_cpus_str(self):
+        """ return a list of strings of numbers of all default schedulable cpus """
         cpulist = [str(cpu) for cpu in self.default_cpus()]
         return cpulist
 
