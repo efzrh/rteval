@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
 """ Module containing class Stressng to manage stress-ng as an rteval load """
 import os
 import os.path
