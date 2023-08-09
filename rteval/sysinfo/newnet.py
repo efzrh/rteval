@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
 ''' Module to obtain network information for the rteval report '''
 #
 #   Copyright 2022 John Kacur <jkacur@redhat.com
