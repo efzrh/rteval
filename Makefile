@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
 HERE	:=	$(shell pwd)
 ifneq (, $(wildcard /usr/bin/python3))
 	PYTHON = python3
