@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
 import sys, os, readline, libxml2
 from rteval.Log import Log
 
