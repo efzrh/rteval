@@ -1,3 +1,4 @@
+-- SPDX-License-Identifier: GPL-2.0-or-later
 -- SQL delta update from rteval-1.0.sql to rteval-1.1.sql
 
 CREATE TABLE rteval_info (

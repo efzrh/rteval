@@ -1,3 +1,4 @@
+-- SPDX-License-Identifier: GPL-2.0-or-later
 -- SQL delta update from rteval-1.1.sql to rteval-1.2.sql
 
 UPDATE rteval_info SET value = '1.2' WHERE key = 'sql_schema_ver';
