@@ -127,7 +127,15 @@ measurement profiles, based on their characteristics"""
 
     def SetupModuleOptions(self, parser):
         "Sets up all the measurement modules' parameters for the option parser"
-        self.__container.SetupModuleOptions(parser, self.__cfg)
+        grparser = self.__container.SetupModuleOptions(parser, self.__cfg)
+
+        # Set up options specific for measurement module group
+        grparser.add_argument("--measurement-run-on-isolcpus",
+                              dest="measurement___run_on_isolcpus",
+                              action="store_true",
+                              default=self.__cfg.GetSection("measurement").setdefault("run-on-isolcpus", "false").lower()
+                                      == "true",
+                              help="Include isolated CPUs in default cpulist")
 
 
     def Setup(self, modparams):
@@ -138,9 +146,10 @@ measurement profiles, based on their characteristics"""
 
         modcfg = self.__cfg.GetSection("measurement")
         cpulist = modcfg.cpulist
+        run_on_isolcpus = modcfg.run_on_isolcpus
 
         for (modname, modtype) in modcfg:
-            if modtype.lower() == 'module':  # Only 'module' will be supported (ds)
+            if isinstance(modtype, str) and modtype.lower() == 'module':  # Only 'module' will be supported (ds)
                 # Extract the measurement modules info
                 modinfo = self.__container.ModuleInfo(modname)
 
@@ -160,6 +169,7 @@ measurement profiles, based on their characteristics"""
                 # Setup this imported module inside the appropriate measurement profile
                 self.__cfg.AppendConfig(modname, modparams)
                 self.__cfg.AppendConfig(modname, {'cpulist':cpulist})
+                self.__cfg.AppendConfig(modname, {'run-on-isolcpus':run_on_isolcpus})
                 mp.Setup(modname)
 
         del self.__container
@@ -171,11 +181,12 @@ measurement profiles, based on their characteristics"""
         # Get the reports from all meaurement modules in all measurement profiles
         rep_n = libxml2.newNode("Measurements")
         cpulist = self.__cfg.GetSection("measurement").cpulist
+        run_on_isolcpus = self.__cfg.GetSection("measurement").run_on_isolcpus
         if cpulist:
             # Convert str to list and remove offline cpus
             cpulist = CpuList(cpulist).cpulist
         else:
-            cpulist = SysTop().default_cpus()
+            cpulist = SysTop().online_cpus() if run_on_isolcpus else SysTop().default_cpus()
         rep_n.newProp("measurecpus", collapse_cpulist(cpulist))
 
         for mp in self.__measureprofiles:
