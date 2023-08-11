@@ -293,7 +293,7 @@ the information provided by the module"""
                 # Ignore if a section is not found
                 cfg = None
 
-            grparser = parser.add_argument_group("Options for the %s module" % shortmod)
+            modgrparser = parser.add_argument_group("Options for the %s module" % shortmod)
             for (o, s) in list(opts.items()):
                 descr = 'descr' in s and s['descr'] or ""
                 metavar = 'metavar' in s and s['metavar'] or None
@@ -308,13 +308,15 @@ the information provided by the module"""
                     default = 'default' in s and s['default'] or None
 
 
-                grparser.add_argument('--%s-%s' % (shortmod, o),
-                                    dest="%s___%s" % (shortmod, o),
-                                    action='store',
-                                    help='%s%s' % (descr,
-                                                   default and ' (default: %s)' % default or ''),
-                                    default=default,
-                                    metavar=metavar)
+                modgrparser.add_argument('--%s-%s' % (shortmod, o),
+                                         dest="%s___%s" % (shortmod, o),
+                                         action='store',
+                                         help='%s%s' % (descr,
+                                                        default and ' (default: %s)' % default or ''),
+                                         default=default,
+                                         metavar=metavar)
+
+            return grparser
 
 
     def InstantiateModule(self, modname, modcfg, modroot=None):
