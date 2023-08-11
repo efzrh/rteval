@@ -195,6 +195,7 @@ class Cyclictest(rtevalModulePrototype):
         self.__cpus = []
         self.__cyclicdata = {}
         self.__sparse = False
+        self.__run_on_isolcpus = bool(self.__cfg.setdefault('run-on-isolcpus', False))
 
         if self.__cfg.cpulist:
             self.__cpulist = self.__cfg.cpulist
@@ -205,14 +206,21 @@ class Cyclictest(rtevalModulePrototype):
             self.__cpulist = collapse_cpulist(self.__cpus)
             self.__cpus = [str(c) for c in self.__cpus]
             self.__sparse = True
+            if self.__run_on_isolcpus:
+                self._log(Log.WARN, "ignoring --measurement-run-on-isolcpus, since cpulist is specified")
         else:
             self.__cpus = SysTopology().online_cpus_str()
             # Get the cpuset from the environment
             cpuset = os.sched_getaffinity(0)
             # Convert the elements to strings
             cpuset = [str(c) for c in cpuset]
-            # Only include cpus that are in the cpuset
-            self.__cpus = [c for c in self.__cpus if c in cpuset]
+            # Get isolated CPU list
+            isolcpus = [str(c) for c in SysTopology().isolated_cpus()]
+            # Only include cpus that are in the cpuset and isolated CPUs if run_on_isolcpus is enabled
+            self.__cpus = [c for c in self.__cpus if c in cpuset or self.__run_on_isolcpus and c in isolcpus]
+            if self.__run_on_isolcpus:
+                self.__sparse = True
+                self.__cpulist = collapse_cpulist(self.__cpus)
 
         # Sort the list of cpus to align with the order reported by cyclictest
         self.__cpus.sort(key=int)
