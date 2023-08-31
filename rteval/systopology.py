@@ -147,6 +147,8 @@ class CpuList:
     @staticmethod
     def compress_cpulist(cpulist):
         """ return a string representation of cpulist """
+        if not cpulist:
+            return ""
         if isinstance(cpulist[0], int):
             return ",".join(str(e) for e in cpulist)
         return ",".join(cpulist)
