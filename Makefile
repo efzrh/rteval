@@ -79,49 +79,12 @@ rpm_prep:
 
 rpms rpm: rpm_prep rtevalrpm loadrpm
 
-rtevalrpm: rteval-$(VERSION).tar.bz2
-	cp $^ rpm/SOURCES
-	cp rteval.spec rpm/SPECS
-	rpmbuild -ba --define "_topdir $(HERE)/rpm" rpm/SPECS/rteval.spec
-
-rtevalsrpm: rteval-$(VERSION).tar.bz2
-	cp $^ rpm/SOURCES
-	cp rteval.spec rpm/SPECS
-	rpmbuild -bs --define "_topdir $(HERE)/rpm" rpm/SPECS/rteval.spec
-
-
-xmlrpcrpm: rteval-xmlrpc-$(XMLRPCVER).tar.gz
-	cp rteval-xmlrpc-$(XMLRPCVER).tar.gz rpm/SOURCES/
-	cp server/rteval-parser.spec rpm/SPECS/
-	rpmbuild -ba --define "_topdir $(HERE)/rpm" rpm/SPECS/rteval-parser.spec
-
-xmlsrpm: rteval-xmlrpc-$(XMLRPCVER).tar.gz
-	cp rteval-xmlrpc-$(XMLRPCVER).tar.gz rpm/SOURCES/
-	cp server/rteval-parser.spec rpm/SPECS/
-	rpmbuild -bs --define "_topdir $(HERE)/rpm" rpm/SPECS/rteval-parser.spec
-
-loadrpm:
-	rm -rf rpm-loads
-	mkdir -p rpm-loads/{BUILD,RPMS,SRPMS,SOURCES,SPECS}
-	cp rteval-loads.spec rpm-loads/SPECS
-	cp $(LOADS) rpm-loads/SOURCES
-	rpmbuild -ba --define "_topdir $(HERE)/rpm-loads" rpm-loads/SPECS/rteval-loads.spec
-
-rpmlint: rpms
-	@echo "==============="
-	@echo "running rpmlint"
-	rpmlint -v $(shell find ./rpm -type f -name "*.rpm") 	 \
-		$(shell find ./rpm-loads -type f -name "*.rpm")	 \
-		$(shell find ./rpm/SPECS -type f -name "rteval*.spec") \
-		$(shell find ./rpm-loads/SPECS -type f -name "rteval*.spec" )
 
 help:
 	@echo ""
 	@echo "rteval Makefile targets:"
 	@echo ""
 	@echo "        runit:     do a short testrun locally [default]"
-	@echo "        rpm:       run rpmbuild for all rpms"
-	@echo "        rpmlint:   run rpmlint against all rpms/srpms/specfiles"
 	@echo "        tarfile:   create the source tarball"
 	@echo "        install:   install rteval locally"
 	@echo "        clean:     cleanup generated files"
