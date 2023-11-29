@@ -11,7 +11,7 @@ import libxml2
 from rteval.Log import Log
 from rteval.rtevalConfig import rtevalCfgSection
 from rteval.modules import RtEvalModules, rtevalModulePrototype
-from rteval.systopology import collapse_cpulist, CpuList, SysTopology as SysTop
+from rteval.systopology import CpuList, SysTopology as SysTop
 
 class LoadThread(rtevalModulePrototype):
     def __init__(self, name, config, logger=None):
@@ -120,7 +120,7 @@ class LoadModules(RtEvalModules):
             cpulist = CpuList(cpulist).cpulist
         else:
             cpulist = SysTop().default_cpus()
-        rep_n.newProp("loadcpus", collapse_cpulist(cpulist))
+        rep_n.newProp("loadcpus", CpuList.collapse_cpulist(cpulist))
 
         return rep_n
 

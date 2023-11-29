@@ -10,25 +10,6 @@ import os
 import os.path
 import glob
 
-# Utility version of collapse_cpulist that doesn't require a CpuList object
-def collapse_cpulist(cpulist):
-    """ Collapse a list of cpu numbers into a string range
-        of cpus (e.g. 0-5, 7, 9) """
-    if len(cpulist) == 0:
-        return ""
-    idx = CpuList.longest_sequence(cpulist)
-    if idx == 0:
-        seq = str(cpulist[0])
-    else:
-        if idx == 1:
-            seq = f"{cpulist[0]},{cpulist[idx]}"
-        else:
-            seq = f"{cpulist[0]}-{cpulist[idx]}"
-
-    rest = collapse_cpulist(cpulist[idx+1:])
-    if rest == "":
-        return seq
-    return ",".join((seq, rest))
 
 def sysread(path, obj):
     """ Helper function for reading system files """
@@ -93,7 +74,7 @@ class CpuList:
         self.cpulist.sort()
 
     def __str__(self):
-        return self.__collapse_cpulist(self.cpulist)
+        return self.collapse_cpulist(self.cpulist)
 
     def __contains__(self, cpu):
         return cpu in self.cpulist
@@ -114,35 +95,28 @@ class CpuList:
         return os.path.exists(os.path.join(CpuList.cpupath, "isolated"))
 
     @staticmethod
-    def longest_sequence(cpulist):
-        """ return index of last element of a sequence that steps by one """
-        lim = len(cpulist)
-        for idx, _ in enumerate(cpulist):
-            if idx+1 == lim:
-                break
-            if int(cpulist[idx+1]) != (int(cpulist[idx])+1):
-                return idx
-        return lim - 1
-
-    def __collapse_cpulist(self, cpulist):
-        """ Collapse a list of cpu numbers into a string range
+    def collapse_cpulist(cpulist):
+        """
+        Collapse a list of cpu numbers into a string range
         of cpus (e.g. 0-5, 7, 9)
         """
-        if len(cpulist) == 0:
-            return ""
-        idx = self.longest_sequence(cpulist)
-        if idx == 0:
-            seq = str(cpulist[0])
-        else:
-            if idx == 1:
-                seq = f"{cpulist[0]},{cpulist[idx]}"
+        cur_range = [None, None]
+        result = []
+        for cpu in cpulist + [None]:
+            if cur_range[0] is None:
+                cur_range[0] = cur_range[1] = cpu
+                continue
+            if cpu is not None and cpu == cur_range[1] + 1:
+                # Extend currently processed range
+                cur_range[1] += 1
             else:
-                seq = f"{cpulist[0]}-{cpulist[idx]}"
-
-        rest = self.__collapse_cpulist(cpulist[idx+1:])
-        if rest == "":
-            return seq
-        return ",".join((seq, rest))
+                # Range processing finished, add range to string
+                result.append(f"{cur_range[0]}-{cur_range[1]}"
+                              if cur_range[0] != cur_range[1]
+                              else str(cur_range[0]))
+                # Reset
+                cur_range[0] = cur_range[1] = cpu
+        return ",".join(result)
 
     @staticmethod
     def compress_cpulist(cpulist):
@@ -428,7 +402,7 @@ if __name__ == "__main__":
 
         onlcpus = s.online_cpus()
         print(f'onlcpus = {onlcpus}')
-        onlcpus = collapse_cpulist(onlcpus)
+        onlcpus = CpuList.collapse_cpulist(onlcpus)
         print(f'onlcpus = {onlcpus}')
 
         onlcpus_str = s.online_cpus_str()

@@ -5,7 +5,7 @@
 
 import libxml2
 from rteval.modules import RtEvalModules, ModuleContainer
-from rteval.systopology import collapse_cpulist, CpuList, SysTopology as SysTop
+from rteval.systopology import CpuList, SysTopology as SysTop
 
 class MeasurementProfile(RtEvalModules):
     """Keeps and controls all the measurement modules with the same measurement profile"""
@@ -187,7 +187,7 @@ measurement profiles, based on their characteristics"""
             cpulist = CpuList(cpulist).cpulist
         else:
             cpulist = SysTop().online_cpus() if run_on_isolcpus else SysTop().default_cpus()
-        rep_n.newProp("measurecpus", collapse_cpulist(cpulist))
+        rep_n.newProp("measurecpus", CpuList.collapse_cpulist(cpulist))
 
         for mp in self.__measureprofiles:
             mprep_n = mp.MakeReport()

@@ -30,7 +30,7 @@ from rteval import RtEval, rtevalConfig
 from rteval.modules.loads import LoadModules
 from rteval.modules.measurement import MeasurementModules
 from rteval.version import RTEVAL_VERSION
-from rteval.systopology import CpuList, SysTopology, collapse_cpulist
+from rteval.systopology import CpuList, SysTopology
 from rteval.modules.loads.kcompile import ModuleParameters
 
 compress_cpulist = CpuList.compress_cpulist
@@ -211,7 +211,7 @@ def remove_offline(cpulist):
     """ return cpulist in collapsed compressed form with only online cpus """
     tmplist = expand_cpulist(cpulist)
     tmplist = SysTopology().online_cpulist(tmplist)
-    return collapse_cpulist(tmplist)
+    return CpuList.collapse_cpulist(tmplist)
 
 
 if __name__ == '__main__':
