@@ -82,12 +82,17 @@ class CpuList:
     def __len__(self):
         return len(self.cpulist)
 
+    def getcpulist(self):
+        """ return the list of cpus tracked """
+        return self.cpulist
+
     @staticmethod
     def online_file_exists():
         """ Check whether machine / kernel is configured with online file """
-        if os.path.exists('/sys/devices/system/cpu/cpu1/online'):
-            return True
-        return False
+        # Note: some machines do not have cpu0/online so we check cpu1/online.
+        # In the case of machines with a single CPU, there is no cpu1, but
+        # that is not a problem, since a single CPU cannot be offline
+        return os.path.exists(os.path.join(CpuList.cpupath, "cpu1/online"))
 
     @staticmethod
     def isolated_file_exists():
@@ -147,14 +152,9 @@ class CpuList:
                 result.append(a)
         return [int(i) for i in list(set(result))]
 
-    def getcpulist(self):
-        """ return the list of cpus tracked """
-        return self.cpulist
-
-    def is_online(self, n):
+    @staticmethod
+    def is_online(n):
         """ check whether cpu n is online """
-        if n not in self.cpulist:
-            raise RuntimeError(f"invalid cpu number {n}")
         path = os.path.join(CpuList.cpupath, f'cpu{n}')
 
         # Some hardware doesn't allow cpu0 to be turned off
@@ -163,16 +163,17 @@ class CpuList:
 
         return sysread(path, "online") == "1"
 
-    def online_cpulist(self, cpulist):
+    @staticmethod
+    def online_cpulist(cpulist):
         """ Given a cpulist, return a cpulist of online cpus """
         # This only works if the sys online files exist
-        if not self.online_file_exists():
+        if not CpuList.online_file_exists():
             return cpulist
         newlist = []
         for cpu in cpulist:
-            if not self.online_file_exists() and cpu == '0':
+            if not CpuList.online_file_exists() and cpu == '0':
                 newlist.append(cpu)
-            elif self.is_online(int(cpu)):
+            elif CpuList.is_online(int(cpu)):
                 newlist.append(cpu)
         return newlist
 
