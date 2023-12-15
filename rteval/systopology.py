@@ -409,5 +409,6 @@ if __name__ == "__main__":
         onlcpus_str = s.online_cpus_str()
         print(f'onlcpus_str = {onlcpus_str}')
 
-        print(f"invert of [ 2, 4, 5 ] = {s.invert_cpulist([2, 3, 4])}")
+        cpulist = [ 2, 4, 5 ]
+        print(f"invert of {cpulist} = {s.invert_cpulist(cpulist)}")
     unit_test()
