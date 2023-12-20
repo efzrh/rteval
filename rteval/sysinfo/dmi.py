@@ -15,8 +15,8 @@ from rteval import xmlout
 from rteval import rtevalConfig
 
 try:
-    import dmidecode
-    dmidecode_avail = True
+    # import dmidecode
+    dmidecode_avail = False
 except ModuleNotFoundError:
     dmidecode_avail = False
 

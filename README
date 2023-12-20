@@ -19,14 +19,8 @@ Rteval requires the following packages to run:
 Python >= 3.0
     http://www.python.org/download/
 
-python-ethtool
-    git://git.kernel.org/pub/scm/linux/kernel/git/acme/python-ethtool.git
-
 python-lxml
   http://lxml.de/
-
-python-dmidecode
-    http://www.ohloh.net/p/python-dmidecode
 
 libxml2-python
     http://xmlsoft.org/
