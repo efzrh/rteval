@@ -31,6 +31,7 @@ load:
 	$(PYTHON) rteval-cmd --onlyload -D -L -v --workdir=./run --loaddir=$(HERE)/loadsource -f $(HERE)/rteval/rteval.conf -i $(HERE)/rteval
 
 sysreport:
+	[ -d $(HERE)/run ] || mkdir run
 	$(PYTHON) rteval-cmd -D -v --workdir=$(HERE)/run --loaddir=$(HERE)/loadsource --duration=$(D) -i $(HERE)/rteval --sysreport
 
 clean:
@@ -39,7 +40,7 @@ clean:
 
 realclean: clean
 	[ -f $(XMLRPCDIR)/Makefile ] && make -C $(XMLRPCDIR) maintainer-clean || echo -n
-	rm -rf run rpm
+	rm -rf run
 
 install: install_loads install_rteval
 
@@ -73,13 +74,6 @@ rteval-xmlrpc-$(XMLRPCVER).tar.gz :
 	make distcheck
 	cp $(XMLRPCDIR)/rteval-xmlrpc-$(XMLRPCVER).tar.gz $(HERE)/
 
-rpm_prep:
-	rm -rf rpm
-	mkdir -p rpm/{BUILD,RPMS,SRPMS,SOURCES,SPECS}
-
-rpms rpm: rpm_prep rtevalrpm loadrpm
-
-
 help:
 	@echo ""
 	@echo "rteval Makefile targets:"
@@ -88,6 +82,7 @@ help:
 	@echo "        tarfile:   create the source tarball"
 	@echo "        install:   install rteval locally"
 	@echo "        clean:     cleanup generated files"
+	@echo "        realclean: Same as clean plus directory run"
 	@echo "        sysreport: do a short testrun and generate sysreport data"
 	@echo "        tags:      generate a ctags file"
 	@echo "        cleantags: remove the ctags file"
