@@ -7,10 +7,10 @@ import subprocess
 import signal
 from rteval.modules.loads import CommandLineLoad
 from rteval.Log import Log
-from rteval.systopology import CpuList, SysTopology
+from rteval.systopology import SysTopology
+import rteval.cpulist_utils as cpulist_utils
 
-expand_cpulist = CpuList.expand_cpulist
-nonisolated_cpulist = CpuList.nonisolated_cpulist
+expand_cpulist = cpulist_utils.expand_cpulist
 
 class Stressng(CommandLineLoad):
     " This class creates a load module that runs stress-ng "
@@ -73,7 +73,7 @@ class Stressng(CommandLineLoad):
                 cpus[n] = [c for c in cpus[n] if c in expand_cpulist(self.cpulist)]
             # if a cpulist was not specified, exclude isolated cpus
             else:
-                cpus[n] = CpuList.nonisolated_cpulist(cpus[n])
+                cpus[n] = cpulist_utils.nonisolated_cpulist(cpus[n])
 
 
         # remove nodes with no cpus available for running

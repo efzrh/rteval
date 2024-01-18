@@ -14,11 +14,12 @@ import subprocess
 from rteval.modules import rtevalRuntimeError
 from rteval.modules.loads import CommandLineLoad
 from rteval.Log import Log
-from rteval.systopology import CpuList, SysTopology
+from rteval.systopology import SysTopology
+import rteval.cpulist_utils as cpulist_utils
 
-expand_cpulist = CpuList.expand_cpulist
-compress_cpulist = CpuList.compress_cpulist
-nonisolated_cpulist = CpuList.nonisolated_cpulist
+expand_cpulist = cpulist_utils.expand_cpulist
+compress_cpulist = cpulist_utils.compress_cpulist
+nonisolated_cpulist = cpulist_utils.nonisolated_cpulist
 
 DEFAULT_KERNEL_PREFIX = "linux-6.6"
 
@@ -38,7 +39,7 @@ class KBuildJob:
             os.mkdir(self.objdir)
 
         # Exclude isolated CPUs if cpulist not set
-        cpus_available = len(nonisolated_cpulist(self.node.cpus.cpulist))
+        cpus_available = len(nonisolated_cpulist(self.node.cpus))
 
         if os.path.exists('/usr/bin/numactl') and not cpulist:
             # Use numactl

@@ -9,12 +9,8 @@
 import os
 import os.path
 import glob
-
-
-def sysread(path, obj):
-    """ Helper function for reading system files """
-    with open(os.path.join(path, obj), "r") as fp:
-        return fp.readline().strip()
+import rteval.cpulist_utils as cpulist_utils
+from rteval.cpulist_utils import sysread
 
 def cpuinfo():
     ''' return a dictionary of cpu keys with various cpu information '''
@@ -57,145 +53,6 @@ def cpuinfo():
 
 
 #
-# class to provide access to a list of cpus
-#
-
-class CpuList:
-    "Object that represents a group of system cpus"
-
-    cpupath = '/sys/devices/system/cpu'
-
-    def __init__(self, cpulist):
-        if isinstance(cpulist, list):
-            self.cpulist = cpulist
-        elif isinstance(cpulist, str):
-            self.cpulist = self.expand_cpulist(cpulist)
-        self.cpulist = self.online_cpulist(self.cpulist)
-        self.cpulist.sort()
-
-    def __str__(self):
-        return self.collapse_cpulist(self.cpulist)
-
-    def __contains__(self, cpu):
-        return cpu in self.cpulist
-
-    def __len__(self):
-        return len(self.cpulist)
-
-    def getcpulist(self):
-        """ return the list of cpus tracked """
-        return self.cpulist
-
-    @staticmethod
-    def online_file_exists():
-        """ Check whether machine / kernel is configured with online file """
-        # Note: some machines do not have cpu0/online so we check cpu1/online.
-        # In the case of machines with a single CPU, there is no cpu1, but
-        # that is not a problem, since a single CPU cannot be offline
-        return os.path.exists(os.path.join(CpuList.cpupath, "cpu1/online"))
-
-    @staticmethod
-    def isolated_file_exists():
-        """ Check whether machine / kernel is configured with isolated file """
-        return os.path.exists(os.path.join(CpuList.cpupath, "isolated"))
-
-    @staticmethod
-    def collapse_cpulist(cpulist):
-        """
-        Collapse a list of cpu numbers into a string range
-        of cpus (e.g. 0-5, 7, 9)
-        """
-        cur_range = [None, None]
-        result = []
-        for cpu in cpulist + [None]:
-            if cur_range[0] is None:
-                cur_range[0] = cur_range[1] = cpu
-                continue
-            if cpu is not None and cpu == cur_range[1] + 1:
-                # Extend currently processed range
-                cur_range[1] += 1
-            else:
-                # Range processing finished, add range to string
-                result.append(f"{cur_range[0]}-{cur_range[1]}"
-                              if cur_range[0] != cur_range[1]
-                              else str(cur_range[0]))
-                # Reset
-                cur_range[0] = cur_range[1] = cpu
-        return ",".join(result)
-
-    @staticmethod
-    def compress_cpulist(cpulist):
-        """ return a string representation of cpulist """
-        if not cpulist:
-            return ""
-        if isinstance(cpulist[0], int):
-            return ",".join(str(e) for e in cpulist)
-        return ",".join(cpulist)
-
-    @staticmethod
-    def expand_cpulist(cpulist):
-        """ expand a range string into an array of cpu numbers
-        don't error check against online cpus
-        """
-        result = []
-
-        if not cpulist:
-            return result
-
-        for part in cpulist.split(','):
-            if '-' in part:
-                a, b = part.split('-')
-                a, b = int(a), int(b)
-                result.extend(list(range(a, b + 1)))
-            else:
-                a = int(part)
-                result.append(a)
-        return [int(i) for i in list(set(result))]
-
-    @staticmethod
-    def is_online(n):
-        """ check whether cpu n is online """
-        path = os.path.join(CpuList.cpupath, f'cpu{n}')
-
-        # Some hardware doesn't allow cpu0 to be turned off
-        if not os.path.exists(path + '/online') and n == 0:
-            return True
-
-        return sysread(path, "online") == "1"
-
-    @staticmethod
-    def online_cpulist(cpulist):
-        """ Given a cpulist, return a cpulist of online cpus """
-        # This only works if the sys online files exist
-        if not CpuList.online_file_exists():
-            return cpulist
-        newlist = []
-        for cpu in cpulist:
-            if not CpuList.online_file_exists() and cpu == '0':
-                newlist.append(cpu)
-            elif CpuList.is_online(int(cpu)):
-                newlist.append(cpu)
-        return newlist
-
-    @staticmethod
-    def isolated_cpulist(cpulist):
-        """Given a cpulist, return a cpulist of isolated CPUs"""
-        if not CpuList.isolated_file_exists():
-            return cpulist
-        isolated_cpulist = sysread(CpuList.cpupath, "isolated")
-        isolated_cpulist = CpuList.expand_cpulist(isolated_cpulist)
-        return list(set(isolated_cpulist) & set(cpulist))
-
-    @staticmethod
-    def nonisolated_cpulist(cpulist):
-        """Given a cpulist, return a cpulist of non-isolated CPUs"""
-        if not CpuList.isolated_file_exists():
-            return cpulist
-        isolated_cpulist = sysread(CpuList.cpupath, "isolated")
-        isolated_cpulist = CpuList.expand_cpulist(isolated_cpulist)
-        return list(set(cpulist).difference(set(isolated_cpulist)))
-
-#
 # class to abstract access to NUMA nodes in /sys filesystem
 #
 
@@ -208,7 +65,8 @@ class NumaNode:
         """
         self.path = path
         self.nodeid = int(os.path.basename(path)[4:].strip())
-        self.cpus = CpuList(sysread(self.path, "cpulist"))
+        self.cpus = cpulist_utils.expand_cpulist(sysread(self.path, "cpulist"))
+        self.cpus = cpulist_utils.online_cpulist(self.cpus)
         self.getmeminfo()
 
     def __contains__(self, cpu):
@@ -240,11 +98,11 @@ class NumaNode:
 
     def getcpustr(self):
         """ return list of cpus for this node as a string """
-        return str(self.cpus)
+        return cpulist_utils.collapse_cpulist(self.cpus)
 
     def getcpulist(self):
         """ return list of cpus for this node """
-        return self.cpus.getcpulist()
+        return self.cpus
 
 class SimNumaNode(NumaNode):
     """class representing a simulated NUMA node.
@@ -257,7 +115,8 @@ class SimNumaNode(NumaNode):
 
     def __init__(self):
         self.nodeid = 0
-        self.cpus = CpuList(sysread(SimNumaNode.cpupath, "possible"))
+        self.cpus = cpulist_utils.expand_cpulist(sysread(SimNumaNode.cpupath, "possible"))
+        self.cpus = cpulist_utils.online_cpulist(self.cpus)
         self.getmeminfo()
 
     def getmeminfo(self):
@@ -339,7 +198,7 @@ class SysTopology:
         """ return a list of integers of all online cpus """
         cpulist = []
         for n in self.nodes:
-            cpulist += self.getcpus(n)
+            cpulist += cpulist_utils.online_cpulist(self.getcpus(n))
         cpulist.sort()
         return cpulist
 
@@ -347,7 +206,7 @@ class SysTopology:
         """ return a list of integers of all isolated cpus """
         cpulist = []
         for n in self.nodes:
-            cpulist += CpuList.isolated_cpulist(self.getcpus(n))
+            cpulist += cpulist_utils.isolated_cpulist(self.getcpus(n))
         cpulist.sort()
         return cpulist
 
@@ -355,7 +214,7 @@ class SysTopology:
         """ return a list of integers of all default schedulable cpus, i.e. online non-isolated cpus """
         cpulist = []
         for n in self.nodes:
-            cpulist += CpuList.nonisolated_cpulist(self.getcpus(n))
+            cpulist += cpulist_utils.nonisolated_cpulist(self.getcpus(n))
         cpulist.sort()
         return cpulist
 
@@ -403,7 +262,7 @@ if __name__ == "__main__":
 
         onlcpus = s.online_cpus()
         print(f'onlcpus = {onlcpus}')
-        onlcpus = CpuList.collapse_cpulist(onlcpus)
+        onlcpus = cpulist_utils.collapse_cpulist(onlcpus)
         print(f'onlcpus = {onlcpus}')
 
         onlcpus_str = s.online_cpus_str()

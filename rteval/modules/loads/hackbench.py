@@ -16,10 +16,11 @@ import errno
 from signal import SIGKILL
 from rteval.modules.loads import CommandLineLoad
 from rteval.Log import Log
-from rteval.systopology import CpuList, SysTopology
+from rteval.systopology import SysTopology
+import rteval.cpulist_utils as cpulist_utils
 
-expand_cpulist = CpuList.expand_cpulist
-isolated_cpulist = CpuList.isolated_cpulist
+expand_cpulist = cpulist_utils.expand_cpulist
+isolated_cpulist = cpulist_utils.isolated_cpulist
 
 class Hackbench(CommandLineLoad):
     def __init__(self, config, logger):
@@ -61,7 +62,7 @@ class Hackbench(CommandLineLoad):
                 self.cpus[n] = [c for c in self.cpus[n] if c in expand_cpulist(self.cpulist)]
             # if a cpulist was not specified, exclude isolated cpus
             else:
-                self.cpus[n] = CpuList.nonisolated_cpulist(self.cpus[n])
+                self.cpus[n] = cpulist_utils.nonisolated_cpulist(self.cpus[n])
 
             # track largest number of cpus used on a node
             node_biggest = len(self.cpus[n])

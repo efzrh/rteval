@@ -17,9 +17,10 @@ import libxml2
 from rteval.Log import Log
 from rteval.modules import rtevalModulePrototype
 from rteval.systopology import cpuinfo
-from rteval.systopology import CpuList, SysTopology
+from rteval.systopology import SysTopology
+import rteval.cpulist_utils as cpulist_utils
 
-expand_cpulist = CpuList.expand_cpulist
+expand_cpulist = cpulist_utils.expand_cpulist
 
 class RunData:
     '''class to keep instance data from a cyclictest run'''
@@ -201,9 +202,9 @@ class Cyclictest(rtevalModulePrototype):
             self.__cpulist = self.__cfg.cpulist
             self.__cpus = expand_cpulist(self.__cpulist)
             # Only include online cpus
-            self.__cpus = CpuList(self.__cpus).cpulist
+            self.__cpus = cpulist_utils.online_cpulist(self.__cpus)
             # Reset cpulist from the newly calculated self.__cpus
-            self.__cpulist = CpuList.collapse_cpulist(self.__cpus)
+            self.__cpulist = cpulist_utils.collapse_cpulist(self.__cpus)
             self.__cpus = [str(c) for c in self.__cpus]
             self.__sparse = True
             if self.__run_on_isolcpus:
@@ -220,7 +221,7 @@ class Cyclictest(rtevalModulePrototype):
             self.__cpus = [c for c in self.__cpus if c in cpuset or self.__run_on_isolcpus and c in isolcpus]
             if self.__run_on_isolcpus:
                 self.__sparse = True
-                self.__cpulist = CpuList.collapse_cpulist([int(c) for c in self.__cpus])
+                self.__cpulist = cpulist_utils.collapse_cpulist([int(c) for c in self.__cpus])
 
         # Sort the list of cpus to align with the order reported by cyclictest
         self.__cpus.sort(key=int)

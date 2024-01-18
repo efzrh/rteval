@@ -11,7 +11,8 @@ import libxml2
 from rteval.Log import Log
 from rteval.rtevalConfig import rtevalCfgSection
 from rteval.modules import RtEvalModules, rtevalModulePrototype
-from rteval.systopology import CpuList, SysTopology as SysTop
+from rteval.systopology import SysTopology as SysTop
+import rteval.cpulist_utils as cpulist_utils
 
 class LoadThread(rtevalModulePrototype):
     def __init__(self, name, config, logger=None):
@@ -117,10 +118,11 @@ class LoadModules(RtEvalModules):
         cpulist = self._cfg.GetSection(self._module_config).cpulist
         if cpulist:
             # Convert str to list and remove offline cpus
-            cpulist = CpuList(cpulist).cpulist
+            cpulist = cpulist_utils.expand_cpulist(cpulist)
+            cpulist = cpulist_utils.online_cpulist(cpulist)
         else:
             cpulist = SysTop().default_cpus()
-        rep_n.newProp("loadcpus", CpuList.collapse_cpulist(cpulist))
+        rep_n.newProp("loadcpus", cpulist_utils.collapse_cpulist(cpulist))
 
         return rep_n
 

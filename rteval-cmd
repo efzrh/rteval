@@ -30,11 +30,13 @@ from rteval import RtEval, rtevalConfig
 from rteval.modules.loads import LoadModules
 from rteval.modules.measurement import MeasurementModules
 from rteval.version import RTEVAL_VERSION
-from rteval.systopology import CpuList, SysTopology
+from rteval.systopology import SysTopology
 from rteval.modules.loads.kcompile import ModuleParameters
+import rteval.cpulist_utils as cpulist_utils
 
-compress_cpulist = CpuList.compress_cpulist
-expand_cpulist = CpuList.expand_cpulist
+compress_cpulist = cpulist_utils.compress_cpulist
+expand_cpulist = cpulist_utils.expand_cpulist
+collapse_cpulist = cpulist_utils.collapse_cpulist
 
 def summarize(repfile, xslt):
     """ Summarize an already existing XML report """
@@ -211,7 +213,7 @@ def remove_offline(cpulist):
     """ return cpulist in collapsed compressed form with only online cpus """
     tmplist = expand_cpulist(cpulist)
     tmplist = SysTopology().online_cpulist(tmplist)
-    return CpuList.collapse_cpulist(tmplist)
+    return collapse_cpulist(tmplist)
 
 
 if __name__ == '__main__':
