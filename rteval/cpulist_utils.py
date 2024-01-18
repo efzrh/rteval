@@ -126,3 +126,36 @@ def nonisolated_cpulist(cpulist):
     isolated_cpulist = sysread(cpupath, "isolated")
     isolated_cpulist = expand_cpulist(isolated_cpulist)
     return list(set(cpulist).difference(set(isolated_cpulist)))
+
+
+def is_relative(cpulist):
+    return cpulist.startswith("+") or cpulist.startswith("-")
+
+
+def expand_relative_cpulist(cpulist):
+    """
+    Expand a relative cpulist into a tuple of lists.
+    :param cpulist: Relative cpulist of form +1,2,3,-4,5,6
+    :return: Tuple of two lists, one for added CPUs, one for removed CPUs
+    """
+    added_cpus = []
+    removed_cpus = []
+
+    if not cpulist:
+        return added_cpus, removed_cpus
+
+    cpus = None
+
+    for part in cpulist.split(','):
+        if part.startswith('+') or part.startswith('-'):
+            cpus = added_cpus if part[0] == '+' else removed_cpus
+            part = part[1:]
+        if '-' in part:
+            a, b = part.split('-')
+            a, b = int(a), int(b)
+            cpus.extend(list(range(a, b + 1)))
+        else:
+            a = int(part)
+            cpus.append(a)
+
+    return list(set(added_cpus)), list(set(removed_cpus))

@@ -5,7 +5,7 @@
 
 import libxml2
 from rteval.modules import RtEvalModules, ModuleContainer
-from rteval.systopology import SysTopology as SysTop
+from rteval.systopology import parse_cpulist_from_config
 import rteval.cpulist_utils as cpulist_utils
 
 class MeasurementProfile(RtEvalModules):
@@ -183,12 +183,7 @@ measurement profiles, based on their characteristics"""
         rep_n = libxml2.newNode("Measurements")
         cpulist = self.__cfg.GetSection("measurement").cpulist
         run_on_isolcpus = self.__cfg.GetSection("measurement").run_on_isolcpus
-        if cpulist:
-            # Convert str to list and remove offline cpus
-            cpulist = cpulist_utils.expand_cpulist(cpulist)
-            cpulist = cpulist_utils.online_cpulist(cpulist)
-        else:
-            cpulist = SysTop().online_cpus() if run_on_isolcpus else SysTop().default_cpus()
+        cpulist = parse_cpulist_from_config(cpulist, run_on_isolcpus)
         rep_n.newProp("measurecpus", cpulist_utils.collapse_cpulist(cpulist))
 
         for mp in self.__measureprofiles:

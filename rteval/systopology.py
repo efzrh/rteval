@@ -241,6 +241,39 @@ class SysTopology:
         """ return a list of online cpus in cpulist """
         return [c for c in self.online_cpus() if c in cpulist]
 
+
+def parse_cpulist_from_config(cpulist, run_on_isolcpus=False):
+    """
+    Generates a cpulist based on --*-cpulist argument given by user
+    :param cpulist: Value of --*-cpulist argument
+    :param run_on_isolcpus: Value of --*-run-on-isolcpus argument
+    :return: Sorted list of CPUs as integers
+    """
+    if cpulist and not cpulist_utils.is_relative(cpulist):
+        result = cpulist_utils.expand_cpulist(cpulist)
+        # Only include online cpus
+        result = cpulist_utils.online_cpulist(result)
+    else:
+        result = SysTopology().online_cpus()
+        # Get the cpuset from the environment
+        cpuset = os.sched_getaffinity(0)
+        # Get isolated CPU list
+        isolcpus = SysTopology().isolated_cpus()
+        if cpulist and cpulist_utils.is_relative(cpulist):
+            # Include cpus that are not removed in relative cpuset and are either in cpuset from affinity,
+            # isolcpus (with run_on_isolcpus enabled, or added by relative cpuset
+            added_cpus, removed_cpus = cpulist_utils.expand_relative_cpulist(cpulist)
+            result = [c for c in result
+                      if (c in cpuset or
+                          c in added_cpus or
+                          run_on_isolcpus and c in isolcpus) and
+                      c not in removed_cpus]
+        else:
+            # Only include cpus that are in the cpuset and isolated CPUs if run_on_isolcpus is enabled
+            result = [c for c in result if c in cpuset or run_on_isolcpus and c in isolcpus]
+    return result
+
+
 if __name__ == "__main__":
 
     def unit_test():

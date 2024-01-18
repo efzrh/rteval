@@ -16,8 +16,7 @@ import math
 import libxml2
 from rteval.Log import Log
 from rteval.modules import rtevalModulePrototype
-from rteval.systopology import cpuinfo
-from rteval.systopology import SysTopology
+from rteval.systopology import cpuinfo, parse_cpulist_from_config
 import rteval.cpulist_utils as cpulist_utils
 
 expand_cpulist = cpulist_utils.expand_cpulist
@@ -193,39 +192,9 @@ class Cyclictest(rtevalModulePrototype):
         self.__priority = int(self.__cfg.setdefault('priority', 95))
         self.__buckets = int(self.__cfg.setdefault('buckets', 2000))
         self.__numcores = 0
-        self.__cpus = []
         self.__cyclicdata = {}
-        self.__sparse = False
-        self.__run_on_isolcpus = bool(self.__cfg.setdefault('run-on-isolcpus', False))
-
-        if self.__cfg.cpulist:
-            self.__cpulist = self.__cfg.cpulist
-            self.__cpus = expand_cpulist(self.__cpulist)
-            # Only include online cpus
-            self.__cpus = cpulist_utils.online_cpulist(self.__cpus)
-            # Reset cpulist from the newly calculated self.__cpus
-            self.__cpulist = cpulist_utils.collapse_cpulist(self.__cpus)
-            self.__cpus = [str(c) for c in self.__cpus]
-            self.__sparse = True
-            if self.__run_on_isolcpus:
-                self._log(Log.WARN, "ignoring --measurement-run-on-isolcpus, since cpulist is specified")
-        else:
-            self.__cpus = SysTopology().online_cpus_str()
-            # Get the cpuset from the environment
-            cpuset = os.sched_getaffinity(0)
-            # Convert the elements to strings
-            cpuset = [str(c) for c in cpuset]
-            # Get isolated CPU list
-            isolcpus = [str(c) for c in SysTopology().isolated_cpus()]
-            # Only include cpus that are in the cpuset and isolated CPUs if run_on_isolcpus is enabled
-            self.__cpus = [c for c in self.__cpus if c in cpuset or self.__run_on_isolcpus and c in isolcpus]
-            if self.__run_on_isolcpus:
-                self.__sparse = True
-                self.__cpulist = cpulist_utils.collapse_cpulist([int(c) for c in self.__cpus])
-
-        # Sort the list of cpus to align with the order reported by cyclictest
-        self.__cpus.sort(key=int)
-
+        self.__cpulist = self.__cfg.cpulist
+        self.__cpus = [str(c) for c in expand_cpulist(self.__cpulist)]
         self.__numcores = len(self.__cpus)
 
         info = cpuinfo()
@@ -242,10 +211,7 @@ class Cyclictest(rtevalModulePrototype):
                                               logfnc=self._log)
         self.__cyclicdata['system'].description = (f"({self.__numcores} cores) ") + info['0']['model name']
 
-        if self.__sparse:
-            self._log(Log.DEBUG, f"system using {self.__numcores} cpu cores")
-        else:
-            self._log(Log.DEBUG, f"system has {self.__numcores} cpu cores")
+        self._log(Log.DEBUG, f"system using {self.__numcores} cpu cores")
         self.__started = False
         self.__cyclicoutput = None
         self.__breaktraceval = None
@@ -280,12 +246,8 @@ class Cyclictest(rtevalModulePrototype):
                       f'-h {self.__buckets}',
                       f"-p{int(self.__priority)}",
                       ]
-        if self.__sparse:
-            self.__cmd.append(f'-t{self.__numcores}')
-            self.__cmd.append(f'-a{self.__cpulist}')
-        else:
-            self.__cmd.append('-t')
-            self.__cmd.append('-a')
+        self.__cmd.append(f'-t{self.__numcores}')
+        self.__cmd.append(f'-a{self.__cpulist}')
 
         if 'threads' in self.__cfg and self.__cfg.threads:
             self.__cmd.append(f"-t{int(self.__cfg.threads)}")

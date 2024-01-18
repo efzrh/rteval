@@ -30,7 +30,7 @@ from rteval import RtEval, rtevalConfig
 from rteval.modules.loads import LoadModules
 from rteval.modules.measurement import MeasurementModules
 from rteval.version import RTEVAL_VERSION
-from rteval.systopology import SysTopology
+from rteval.systopology import SysTopology, parse_cpulist_from_config
 from rteval.modules.loads.kcompile import ModuleParameters
 import rteval.cpulist_utils as cpulist_utils
 
@@ -339,26 +339,32 @@ if __name__ == '__main__':
 
         ldcfg = config.GetSection('loads')
         msrcfg = config.GetSection('measurement')
-        if ldcfg.cpulist and msrcfg.cpulist:
+        msrcfg_cpulist_present = msrcfg.cpulist != ""
+        # Parse measurement cpulist using parse_cpulist_from_config to account for run-on-isolcpus
+        # and relative cpusets
+        cpulist = parse_cpulist_from_config(msrcfg.cpulist, msrcfg.run_on_isolcpus)
+        if msrcfg_cpulist_present and not cpulist_utils.is_relative(msrcfg.cpulist) and msrcfg.run_on_isolcpus:
+            logger.log(Log.WARN, "ignoring --measurement-run-on-isolcpus, since cpulist is specified")
+        msrcfg.cpulist = collapse_cpulist(cpulist)
+        if ldcfg.cpulist:
             ldcfg.cpulist = remove_offline(ldcfg.cpulist)
-            msrcfg.cpulist = remove_offline(msrcfg.cpulist)
         # if we only specified one set of cpus (loads or measurement)
         # default the other to the inverse of the specified list
-        if not ldcfg.cpulist and msrcfg.cpulist:
+        if not ldcfg.cpulist and msrcfg_cpulist_present:
             tmplist = expand_cpulist(msrcfg.cpulist)
             tmplist = SysTopology().invert_cpulist(tmplist)
-            ldcfg.cpulist = compress_cpulist(tmplist)
-            msrcfg.cpulist = remove_offline(msrcfg.cpulist)
-        if not msrcfg.cpulist and ldcfg.cpulist:
+            tmplist = cpulist_utils.online_cpulist(tmplist)
+            ldcfg.cpulist = collapse_cpulist(tmplist)
+        if not msrcfg_cpulist_present and ldcfg.cpulist:
             tmplist = expand_cpulist(ldcfg.cpulist)
             tmplist = SysTopology().invert_cpulist(tmplist)
-            msrcfg.cpulist = compress_cpulist(tmplist)
-            ldcfg.cpulist = remove_offline(ldcfg.cpulist)
+            tmplist = cpulist_utils.online_cpulist(tmplist)
+            msrcfg.cpulist = collapse_cpulist(tmplist)
 
         if ldcfg.cpulist:
             logger.log(Log.DEBUG, f"loads cpulist: {ldcfg.cpulist}")
         # if --onlyload is specified msrcfg.cpulist is unused
-        if msrcfg.cpulist and not rtevcfg.onlyload:
+        if msrcfg_cpulist_present and not rtevcfg.onlyload:
             logger.log(Log.DEBUG, f"measurement cpulist: {msrcfg.cpulist}")
         logger.log(Log.DEBUG, f"workdir: {rtevcfg.workdir}")
 
