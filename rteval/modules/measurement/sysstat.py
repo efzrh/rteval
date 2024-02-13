@@ -131,7 +131,7 @@ if __name__ == '__main__':
     c._WorkloadSetup()
     c._WorkloadPrepare()
     c._WorkloadTask()
-    print("Running for approx %i seconds" % runtime)
+    print(f"Running for approx {runtime} seconds")
     while runtime > 0:
         c.WorkloadAlive()
         time.sleep(1)

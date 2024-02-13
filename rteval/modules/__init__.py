@@ -47,7 +47,7 @@ class rtevalModulePrototype(threading.Thread):
     def _log(self, logtype, msg):
         """ Common log function for rteval modules """
         if self.__logger:
-            self.__logger.log(logtype, "[%s] %s" % (self._name, msg))
+            self.__logger.log(logtype, f"[{self._name}] {msg}")
 
 
     def isReady(self):
@@ -123,40 +123,40 @@ class rtevalModulePrototype(threading.Thread):
         """ Required module method, which purpose is to do the initial workload
         setup, preparing for _WorkloadBuild()
         """
-        raise NotImplementedError("_WorkloadSetup() method must be implemented in the %s module" % self._name)
+        raise NotImplementedError(f"_WorkloadSetup() method must be implemented in the {self._name} module")
 
 
     def _WorkloadBuild(self):
         """ Required module method, which purpose is to compile additional code
         needed for the worklaod
         """
-        raise NotImplementedError("_WorkloadBuild() method must be implemented in the %s module" % self._name)
+        raise NotImplementedError(f"_WorkloadBuild() method must be implemented in the {self._name} module")
 
 
     def _WorkloadPrepare(self):
         """ Required module method, which will initialise and prepare the
         workload just before it is about to start
         """
-        raise NotImplementedError("_WorkloadPrepare() method must be implemented in the %s module" % self._name)
+        raise NotImplementedError(f"_WorkloadPrepare() method must be implemented in the {self._name} module")
 
 
     def _WorkloadTask(self):
         """ Required module method, which kicks off the workload """
-        raise NotImplementedError("_WorkloadTask() method must be implemented in the %s module" % self._name)
+        raise NotImplementedError(f"_WorkloadTask() method must be implemented in the {self._name} module")
 
 
     def WorkloadAlive(self):
         """ Required module method, which should return True if the workload is
         still alive
         """
-        raise NotImplementedError("WorkloadAlive() method must be implemented in the %s module" % self._name)
+        raise NotImplementedError(f"WorkloadAlive() method must be implemented in the {self._name} module")
 
 
     def _WorkloadCleanup(self):
         """ Required module method, which will be run after the _WorkloadTask()
         has completed or been aborted by the 'stop event flag'
         """
-        raise NotImplementedError("_WorkloadCleanup() method must be implemented in the %s module" % self._name)
+        raise NotImplementedError(f"_WorkloadCleanup() method must be implemented in the {self._name} module")
 
 
     def WorkloadWillRun(self):
@@ -187,7 +187,7 @@ class rtevalModulePrototype(threading.Thread):
                 if self.shouldStart():
                     break
 
-            self._log(Log.DEBUG, "Starting %s workload" % self._module_type)
+            self._log(Log.DEBUG, f"Starting {self._module_type} workload")
             self.__timestamps["runloop_start"] = datetime.now()
             while not self.shouldStop():
                 # Run the workload
@@ -198,7 +198,7 @@ class rtevalModulePrototype(threading.Thread):
                 time.sleep(self.__sleeptime)
 
             self.__timestamps["runloop_stop"] = datetime.now()
-            self._log(Log.DEBUG, "stopping %s workload" % self._module_type)
+            self._log(Log.DEBUG, f"stopping {self._module_type} workload")
         else:
             self._log(Log.DEBUG, "Workload was not started")
 
@@ -209,7 +209,7 @@ class rtevalModulePrototype(threading.Thread):
         """ required module method, needs to return an libxml2.xmlNode object
         with the the results from running
         """
-        raise NotImplementedError("MakeReport() method must be implemented in the%s module" % self._name)
+        raise NotImplementedError(f"MakeReport() method must be implemented in the {self._name} module")
 
 
     def GetTimestamps(self):
@@ -254,12 +254,12 @@ reference from the first import"""
         # If this module is already reported return the module,
         # if not (except KeyError:) import it and return the imported module
         try:
-            idxname = "%s.%s" % (modroot, modname)
+            idxname = f"{modroot}.{modname}"
             return self.__modsloaded[idxname]
         except KeyError:
-            self.__logger.log(Log.INFO, "importing module %s" % modname)
-            mod = __import__("rteval.%s.%s" % (modroot, modname),
-                             fromlist="rteval.%s" % modroot)
+            self.__logger.log(Log.INFO, f"importing module {modname}")
+            mod = __import__(f"rteval.{modroot}.{modname}",
+                             fromlist=f"rteval.{modroot}")
             self.__modsloaded[idxname] = mod
             return mod
 
@@ -275,10 +275,10 @@ the information provided by the module"""
     def SetupModuleOptions(self, parser, config):
         """Sets up a separate argparse ArgumentGroup per module with its supported parameters"""
 
-        grparser = parser.add_argument_group("Group Options for %s modules" % self.__modtype)
-        grparser.add_argument('--%s-cpulist' % self.__modtype,
-                            dest='%s___cpulist' % self.__modtype, action='store', default="",
-                            help='CPU list where %s modules will run' % self.__modtype,
+        grparser = parser.add_argument_group(f"Group Options for {self.__modtype} modules")
+        grparser.add_argument(f'--{self.__modtype}-cpulist',
+                            dest=f'{self.__modtype}___cpulist', action='store', default="",
+                            help=f'CPU list where {self.__modtype} modules will run',
                             metavar='LIST')
 
         for (modname, mod) in list(self.__modsloaded.items()):
@@ -293,7 +293,7 @@ the information provided by the module"""
                 # Ignore if a section is not found
                 cfg = None
 
-            modgrparser = parser.add_argument_group("Options for the %s module" % shortmod)
+            modgrparser = parser.add_argument_group(f"Options for the {shortmod} module")
             for (o, s) in list(opts.items()):
                 descr = 'descr' in s and s['descr'] or ""
                 metavar = 'metavar' in s and s['metavar'] or None
@@ -308,8 +308,8 @@ the information provided by the module"""
                     default = 'default' in s and s['default'] or None
 
 
-                modgrparser.add_argument('--%s-%s' % (shortmod, o),
-                                         dest="%s___%s" % (shortmod, o),
+                modgrparser.add_argument(f'--{shortmod}-{o}',
+                                         dest=f"{shortmod}___{o}",
                                          action='store',
                                          help='%s%s' % (descr,
                                                         default and ' (default: %s)' % default or ''),
@@ -341,7 +341,7 @@ returned when a ModuleContainer object is iterated over"""
         if modroot is None:
             modroot = self.__modules_root
 
-        mod = "%s.%s" % (modroot, modname)
+        mod = f"{modroot}.{modname}"
         return (mod, self.__modsloaded[mod])
 
 
@@ -448,9 +448,9 @@ class RtEvalModules:
         will not start their workloads yet
         """
         if self.__modules.ModulesLoaded() == 0:
-            raise rtevalRuntimeError("No %s modules configured" % self._module_type)
+            raise rtevalRuntimeError(f"No {self._module_type} modules configured")
 
-        self._logger.log(Log.INFO, "Preparing %s modules" % self._module_type)
+        self._logger.log(Log.INFO, f"Preparing {self._module_type} modules")
         exclusive = 0
         for (modname, mod) in self.__modules:
             if mod.is_exclusive() and mod.WorkloadWillRun():
@@ -464,9 +464,9 @@ class RtEvalModules:
                     mod.set_donotrun()
             mod.start()
             if mod.WorkloadWillRun():
-                self._logger.log(Log.DEBUG, "\t - Started %s preparations" % modname)
+                self._logger.log(Log.DEBUG, f"\t - Started {modname} preparations")
 
-        self._logger.log(Log.DEBUG, "Waiting for all %s modules to get ready" % self._module_type)
+        self._logger.log(Log.DEBUG, f"Waiting for all {self._module_type} modules to get ready")
         busy = True
         while busy:
             busy = False
@@ -474,14 +474,14 @@ class RtEvalModules:
                 if not mod.isReady():
                     if not mod.hadRuntimeError():
                         busy = True
-                        self._logger.log(Log.DEBUG, "Waiting for %s" % modname)
+                        self._logger.log(Log.DEBUG, f"Waiting for {modname}")
                     else:
-                        raise RuntimeError("Runtime error starting the %s %s module" % (modname, self._module_type))
+                        raise RuntimeError(f"Runtime error starting the {modname} {self._module_type} module")
 
             if busy:
                 time.sleep(1)
 
-        self._logger.log(Log.DEBUG, "All %s modules are ready" % self._module_type)
+        self._logger.log(Log.DEBUG, f"All {self._module_type} modules are ready")
 
 
     def hadError(self):
@@ -494,7 +494,7 @@ class RtEvalModules:
 
         # turn loose the loads
         nthreads = 0
-        self._logger.log(Log.INFO, "Sending start event to all %s modules" % self._module_type)
+        self._logger.log(Log.INFO, f"Sending start event to all {self._module_type} modules")
         for (modname, mod) in self.__modules:
             mod.setStart()
             nthreads += 1
@@ -517,31 +517,31 @@ class RtEvalModules:
         """Stops all the running workloads from in all the loaded modules"""
 
         if self.ModulesLoaded() == 0:
-            raise RuntimeError("No %s modules configured" % self._module_type)
+            raise RuntimeError(f"No {self._module_type} modules configured")
 
-        self._logger.log(Log.INFO, "Stopping %s modules" % self._module_type)
+        self._logger.log(Log.INFO, f"Stopping {self._module_type} modules")
         for (modname, mod) in self.__modules:
             if not mod.WorkloadWillRun():
                 continue
 
             mod.setStop()
             try:
-                self._logger.log(Log.DEBUG, "\t - Stopping %s" % modname)
+                self._logger.log(Log.DEBUG, f"\t - Stopping {modname}")
                 if mod.is_alive():
                     mod.join(2.0)
             except RuntimeError as e:
-                self._logger.log(Log.ERR, "\t\tFailed stopping %s: %s" % (modname, str(e)))
+                self._logger.log(Log.ERR, f"\t\tFailed stopping {modname}: {str(e)}")
         self.__timestamps['stop'] = datetime.now()
 
 
     def WaitForCompletion(self, wtime=None):
         """Waits for the running modules to complete their running"""
 
-        self._logger.log(Log.INFO, "Waiting for %s modules to complete" % self._module_type)
+        self._logger.log(Log.INFO, f"Waiting for {self._module_type} modules to complete")
         for (modname, mod) in self.__modules:
-            self._logger.log(Log.DEBUG, "\t - Waiting for %s" % modname)
+            self._logger.log(Log.DEBUG, f"\t - Waiting for {modname}")
             mod.WaitForCompletion(wtime)
-        self._logger.log(Log.DEBUG, "All %s modules completed" % self._module_type)
+        self._logger.log(Log.DEBUG, f"All {self._module_type} modules completed")
 
 
     def MakeReport(self):
@@ -550,7 +550,7 @@ class RtEvalModules:
         rep_n = libxml2.newNode(self._report_tag)
 
         for (modname, mod) in self.__modules:
-            self._logger.log(Log.DEBUG, "Getting report from %s" % modname)
+            self._logger.log(Log.DEBUG, f"Getting report from {modname}")
             modrep_n = mod.MakeReport()
             if modrep_n is not None:
                 if self._module_type != 'load':
