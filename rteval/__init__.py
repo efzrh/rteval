@@ -68,7 +68,7 @@ class RtEval(rtevalReport):
         from .sysinfo import SystemInfo
         self._sysinfo = SystemInfo(self.__rtevcfg, logger=self.__logger)
 
-        if not os.path.exists(self.__rtevcfg.xslt_report):
+        if not self.__rtevcfg.xslt_report or not os.path.exists(self.__rtevcfg.xslt_report):
             raise RuntimeError(f"can't find XSL template ({self.__rtevcfg.xslt_report})!")
 
         # Add rteval directory into module search path

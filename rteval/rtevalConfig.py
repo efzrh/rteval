@@ -46,7 +46,7 @@ def default_config_search(relative_path, verifdef=os.path.isdir):
             if verifdef(os.path.join(path, *relative_path)):
                 return os.path.join(path, *relative_path)
 
-    return False
+    return None
 
 
 # HACK: A temporary hack to try to figure out where the install dir is.
