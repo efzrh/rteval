@@ -145,12 +145,11 @@ class Kcompile(CommandLineLoad):
             return
         self._log(Log.DEBUG, f"removing kcompile directories in {self.builddir}")
         null = os.open("/dev/null", os.O_RDWR)
-        cmd = ["rm", "-rf", os.path.join(self.builddir, "kernel*"),
-               os.path.join(self.builddir, "node*")]
+        cmd = ["rm", "-rf", self.mydir, *glob.glob(os.path.join(self.builddir, 'node*'))]
         ret = subprocess.call(cmd, stdin=null, stdout=null, stderr=null)
         if ret:
             raise rtevalRuntimeError(self, \
-                f"error removing builddir ({self.buildir}) (ret={ret})")
+                f"error removing builddir ({self.builddir}) (ret={ret})")
 
     def _find_tarball(self):
        # If the user specifies the full kernel name, check if available
