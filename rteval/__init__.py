@@ -30,12 +30,11 @@ RTEVAL_VERSION = version.RTEVAL_VERSION
 
 earlystop = False
 
-stopsig_received = False
+stopsig = threading.Event()
 def sig_handler(signum, frame):
     """ Handle SIGINT (CTRL + C) or SIGTERM (Termination signal) """
     if signum in (signal.SIGINT, signal.SIGTERM):
-        global stopsig_received
-        stopsig_received = True
+        stopsig.set()
         print("*** stop signal received - stopping rteval run ***")
     else:
         raise RuntimeError(f"SIGNAL received! ({signum})")
@@ -187,8 +186,8 @@ class RtEval(rtevalReport):
             currtime = time.time()
             rpttime = currtime + report_interval
             load_avg_checked = 5
-            while (currtime <= stoptime) and not stopsig_received:
-                time.sleep(60.0)
+            while (currtime <= stoptime) and not stopsig.is_set():
+                stopsig.wait(min(stoptime - currtime, 60.0))
                 if not measure_profile.isAlive():
                     stoptime = currtime
                     earlystop = True
@@ -217,7 +216,7 @@ class RtEval(rtevalReport):
             signal.signal(signal.SIGTERM, signal.SIG_DFL)
 
         except RuntimeError as err:
-            if not stopsig_received:
+            if not stopsig.is_set():
                 raise RuntimeError(f"appeared during measurement: {err}")
 
         finally:
