@@ -3,6 +3,7 @@
 #   Copyright 2009 - 2013   Clark Williams <williams@redhat.com>
 #   Copyright 2009 - 2013   David Sommerseth <davids@redhat.com>
 #   Copyright 2022          John Kacur <jkacur@redhat.com>
+#   Copyright 2024          Tomas Glozar <tglozar@redhat.com>
 #
 """ dmi.py class to wrap DMI Table Information """
 
@@ -10,65 +11,125 @@ import sys
 import os
 import libxml2
 import lxml.etree
+import shutil
+import re
+from subprocess import Popen, PIPE, SubprocessError
 from rteval.Log import Log
 from rteval import xmlout
 from rteval import rtevalConfig
 
-try:
-    # import dmidecode
-    dmidecode_avail = False
-except ModuleNotFoundError:
-    dmidecode_avail = False
 
-def set_dmidecode_avail(val):
-    """ Used to set global variable dmidecode_avail from a function """
-    global dmidecode_avail
-    dmidecode_avail = val
+def get_dmidecode_xml(dmidecode_executable):
+    """
+    Transform human-readable dmidecode output into machine-processable XML format
+    :param dmidecode_executable: Path to dmidecode tool executable
+    :return: Tuple of values with resulting XML and dmidecode warnings
+    """
+    proc = Popen(dmidecode_executable, text=True, stdout=PIPE, stderr=PIPE)
+    outs, errs = proc.communicate()
+    parts = outs.split("\n\n")
+    if len(parts) < 2:
+        raise RuntimeError("Parsing dmidecode output failed")
+    header = parts[0]
+    handles = parts[1:]
+    root = lxml.etree.Element("dmidecode")
+    # Parse dmidecode output header
+    # Note: Only supports SMBIOS data currently
+    regex = re.compile(r"# dmidecode (\d+\.\d+)\n"
+                       r"Getting SMBIOS data from sysfs\.\n"
+                       r"SMBIOS ((?:\d+\.)+\d+) present\.\n"
+                       r"(?:(\d+) structures occupying (\d+) bytes\.\n)?"
+                       r"Table at (0x[0-9A-Fa-f]+)\.", re.MULTILINE)
+    match = re.match(regex, header)
+    if match is None:
+        raise RuntimeError("Parsing dmidecode output failed")
+    root.attrib["dmidecodeversion"] = match.group(1)
+    root.attrib["smbiosversion"] = match.group(2)
+    if match.group(3) is not None:
+        root.attrib["structures"] = match.group(3)
+    if match.group(4) is not None:
+        root.attrib["size"] = match.group(4)
+    root.attrib["address"] = match.group(5)
 
-def ProcessWarnings(logger=None):
-    """ Process Warnings from dmidecode """
-
-    if not dmidecode_avail:
-        return
-
-    if not hasattr(dmidecode, 'get_warnings'):
-        return
-
-    warnings = dmidecode.get_warnings()
-    if warnings is None:
-        return
-
-    ignore1  = '/dev/mem: Permission denied'
-    ignore2 = 'No SMBIOS nor DMI entry point found, sorry.'
-    ignore3 = 'Failed to open memory buffer (/dev/mem): Permission denied'
-    ignore = (ignore1, ignore2, ignore3)
-    for warnline in warnings.split('\n'):
-        # Ignore these warnings, as they are "valid" if not running as root
-        if warnline in ignore:
+    # Generate element per handle in dmidecode output
+    for handle_text in handles:
+        if not handle_text:
+            # Empty line
             continue
 
-        # All other warnings will be printed
-        if len(warnline) > 0:
-            logger.log(Log.DEBUG, f"** DMI WARNING ** {warnline}")
-            set_dmidecode_avail(False)
+        handle = lxml.etree.Element("Handle")
+        lines = handle_text.splitlines()
+        # Parse handle header
+        if len(lines) < 2:
+            raise RuntimeError("Parsing dmidecode handle failed")
+        header, name, content = lines[0], lines[1], lines[2:]
+        match = re.match(r"Handle (0x[0-9A-Fa-f]{4}), "
+                         r"DMI type (\d+), (\d+) bytes", header)
+        if match is None:
+            raise RuntimeError("Parsing dmidecode handle failed")
+        handle.attrib["address"] = match.group(1)
+        handle.attrib["type"] = match.group(2)
+        handle.attrib["bytes"] = match.group(3)
+        handle.attrib["name"] = name
 
-    dmidecode.clear_warnings()
+        # Parse all fields in handle and create an element for each
+        list_field = None
+        for index, line in enumerate(content):
+            line = content[index]
+            if line.rfind("\t") > 0:
+                # We are inside a list field, add value to it
+                value = lxml.etree.Element("Value")
+                value.text = line.strip()
+                list_field.append(value)
+                continue
+            line = line.lstrip().split(":", 1)
+            if len(line) != 2:
+                raise RuntimeError("Parsing dmidecode field failed")
+            if not line[1] or (index + 1 < len(content) and
+                               content[index + 1].rfind("\t") > 0):
+                # No characters after : or next line is inside list field
+                # means a list field
+                # Note: there are list fields which specify a number of
+                # items, for example "Installable Languages", so merely
+                # checking for no characters after : is not enough
+                list_field = lxml.etree.Element("List")
+                list_field.attrib["Name"] = line[0].strip()
+                handle.append(list_field)
+            else:
+                # Regular field
+                field = lxml.etree.Element("Field")
+                field.attrib["Name"] = line[0].strip()
+                field.text = line[1].strip()
+                handle.append(field)
+
+        root.append(handle)
+
+    return root, errs
 
 
 class DMIinfo:
-    '''class used to obtain DMI info via python-dmidecode'''
+    '''class used to obtain DMI info via dmidecode'''
 
     def __init__(self, logger=None):
         self.__version = '0.6'
         self._log = logger
 
-        if not dmidecode_avail:
-            logger.log(Log.DEBUG, "DMI info unavailable, ignoring DMI tables")
+        dmidecode_executable = shutil.which("dmidecode")
+        if dmidecode_executable is None:
+            logger.log(Log.DEBUG, "DMI info unavailable,"
+                                  " ignoring DMI tables")
             self.__fake = True
             return
 
         self.__fake = False
-        self.__dmixml = dmidecode.dmidecodeXML()
+        try:
+            self.__dmixml, self.__warnings = get_dmidecode_xml(
+                dmidecode_executable)
+        except (RuntimeError, OSError, SubprocessError) as error:
+            logger.log(Log.DEBUG, "DMI info unavailable: {};"
+                                  " ignoring DMI tables".format(str(error)))
+            self.__fake = True
+            return
 
         self.__xsltparser = self.__load_xslt('rteval_dmi.xsl')
 
@@ -88,30 +149,25 @@ class DMIinfo:
 
         raise RuntimeError(f'Could not locate XSLT template for DMI data ({fname})')
 
+    def ProcessWarnings(self):
+        """Prints out warnings from dmidecode into log if there were any"""
+        if self.__fake or self._log is None:
+            return
+        for warnline in self.__warnings.split('\n'):
+            if len(warnline) > 0:
+                self._log.log(Log.DEBUG, f"** DMI WARNING ** {warnline}")
+
     def MakeReport(self):
         """ Add DMI information to final report """
-        rep_n = libxml2.newNode("DMIinfo")
-        rep_n.newProp("version", self.__version)
         if self.__fake:
+            rep_n = libxml2.newNode("DMIinfo")
+            rep_n.newProp("version", self.__version)
             rep_n.addContent("No DMI tables available")
             rep_n.newProp("not_available", "1")
-        else:
-            self.__dmixml.SetResultType(dmidecode.DMIXML_DOC)
-            try:
-                dmiqry = xmlout.convert_libxml2_to_lxml_doc(self.__dmixml.QuerySection('all'))
-            except Exception as ex1:
-                self._log.log(Log.DEBUG, f'** EXCEPTION {str(ex1)}, will query BIOS only')
-                try:
-                    # If we can't query 'all', at least query 'bios'
-                    dmiqry = xmlout.convert_libxml2_to_lxml_doc(self.__dmixml.QuerySection('bios'))
-                except Exception as ex2:
-                    rep_n.addContent("No DMI tables available")
-                    rep_n.newProp("not_available", "1")
-                    self._log.log(Log.DEBUG, f'** EXCEPTION {str(ex2)}, dmi info will not be reported')
-                    return rep_n
-            resdoc = self.__xsltparser(dmiqry)
-            dmi_n = xmlout.convert_lxml_to_libxml2_nodes(resdoc.getroot())
-            rep_n.addChild(dmi_n)
+            return rep_n
+        rep_n = xmlout.convert_lxml_to_libxml2_nodes(self.__dmixml)
+        rep_n.setName("DMIinfo")
+        rep_n.newProp("version", self.__version)
         return rep_n
 
 def unit_test(rootdir):
@@ -130,12 +186,12 @@ def unit_test(rootdir):
         log = Log()
         log.SetLogVerbosity(Log.DEBUG|Log.INFO)
 
-        ProcessWarnings(logger=log)
         if os.getuid() != 0:
             print("** ERROR **  Must be root to run this unit_test()")
             return 1
 
         d = DMIinfo(logger=log)
+        d.ProcessWarnings()
         dx = d.MakeReport()
         x = libxml2.newDoc("1.0")
         x.setRootElement(dx)
