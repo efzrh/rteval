@@ -173,8 +173,6 @@ class RtEval(rtevalReport):
                 nthreads = threading.active_count()
             else:
                 nthreads = None
-            self.__logger.log(Log.INFO, "Waiting 30 seconds to let load modules settle down")
-            time.sleep(30)
             measure_profile.Unleash()
             measure_start = datetime.now()
 
