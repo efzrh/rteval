@@ -113,7 +113,6 @@ if __name__ == '__main__':
             ('rteval/sysinfo','dmi'),
             ('rteval','rtevalConfig'),
             ('rteval','xmlout'),
-            ('server','unittest')
             ))
     # Run all tests
     tests.RunTests()

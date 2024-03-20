@@ -9,10 +9,6 @@ PACKAGE :=	rteval
 VERSION :=      $(shell $(PYTHON) -c "from rteval import RTEVAL_VERSION; print(RTEVAL_VERSION)")
 D	:=	10
 
-# XML-RPC related files
-XMLRPCVER := 1.6
-XMLRPCDIR := server
-
 DESTDIR	:=
 PREFIX  :=      /usr
 DATADIR	:=	$(DESTDIR)/$(PREFIX)/share
@@ -35,11 +31,9 @@ sysreport:
 	$(PYTHON) rteval-cmd -D -v --workdir=$(HERE)/run --loaddir=$(HERE)/loadsource --duration=$(D) -i $(HERE)/rteval --sysreport
 
 clean:
-	[ -f $(XMLRPCDIR)/Makefile ] && make -C $(XMLRPCDIR) clean || echo -n
-	rm -f *~ rteval/*~ rteval/*.py[co] *.tar.bz2 *.tar.gz doc/*~ server/rteval-xmlrpc-*.tar.gz
+	rm -f *~ rteval/*~ rteval/*.py[co] *.tar.bz2 *.tar.gz doc/*~
 
 realclean: clean
-	[ -f $(XMLRPCDIR)/Makefile ] && make -C $(XMLRPCDIR) maintainer-clean || echo -n
 	rm -rf run
 
 install: install_loads install_rteval
@@ -66,13 +60,6 @@ rteval-$(VERSION).tar.bz2:
 	$(PYTHON) setup.py sdist --formats=bztar --owner root --group root
 	mv dist/rteval-$(VERSION).tar.bz2 .
 	rmdir dist
-
-rteval-xmlrpc-$(XMLRPCVER).tar.gz :
-	cd $(XMLRPCDIR) ;             \
-	autoreconf --install ;           \
-	./configure --prefix=$(PREFIX) ; \
-	make distcheck
-	cp $(XMLRPCDIR)/rteval-xmlrpc-$(XMLRPCVER).tar.gz $(HERE)/
 
 help:
 	@echo ""

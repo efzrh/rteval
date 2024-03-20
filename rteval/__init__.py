@@ -22,10 +22,8 @@ import sysconfig
 from rteval.modules.loads import LoadModules
 from rteval.modules.measurement import MeasurementModules, MeasurementProfile
 from rteval.rtevalReport import rtevalReport
-from rteval.rtevalXMLRPC import rtevalXMLRPC
 from rteval.Log import Log
 from rteval import rtevalConfig
-from rteval import rtevalMailer
 from rteval import version
 
 RTEVAL_VERSION = version.RTEVAL_VERSION
@@ -70,12 +68,6 @@ class RtEval(rtevalReport):
         from .sysinfo import SystemInfo
         self._sysinfo = SystemInfo(self.__rtevcfg, logger=self.__logger)
 
-        # prepare a mailer, if that's configured
-        if self.__cfg.HasSection('smtp'):
-            self.__mailer = rtevalMailer.rtevalMailer(self.__cfg.GetSection('smtp'))
-        else:
-            self.__mailer = None
-
         if not os.path.exists(self.__rtevcfg.xslt_report):
             raise RuntimeError(f"can't find XSL template ({self.__rtevcfg.xslt_report})!")
 
@@ -90,19 +82,6 @@ class RtEval(rtevalReport):
         # Initialise the report module
         rtevalReport.__init__(self, self.__version,
                               self.__rtevcfg.installdir, self.__rtevcfg.annotate)
-
-        # If --xmlrpc-submit is given, check that we can access the server
-        if self.__rtevcfg.xmlrpc:
-            self.__xmlrpc = rtevalXMLRPC(self.__rtevcfg.xmlrpc, self.__logger, self.__mailer)
-            if not self.__xmlrpc.Ping():
-                if not self.__rtevcfg.xmlrpc_noabort:
-                    print(f"ERROR: Could not reach XML-RPC server '{self.__rtevcfg.xmlrpc}'.  Aborting.")
-                    sys.exit(2)
-                else:
-                    print("WARNING: Could not ping the XML-RPC server.  Will continue anyway.")
-        else:
-            self.__xmlrpc = None
-
 
     @staticmethod
     def __show_remaining_time(remaining):
@@ -270,10 +249,6 @@ class RtEval(rtevalReport):
         self._report(measure_start, self.__rtevcfg.xslt_report)
         if self.__rtevcfg.sysreport:
             self._sysinfo.run_sysreport(self.__reportdir)
-
-        # if --xmlrpc-submit | -X was given, send our report to the given host
-        if self.__xmlrpc:
-            rtevalres = self.__xmlrpc.SendReport(self.GetXMLreport())
 
         if earlystop:
             rtevalres = 1

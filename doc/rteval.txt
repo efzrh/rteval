@@ -33,8 +33,7 @@ boost the system load.
 Rteval runs for a specified length of time (typically 12 hours). When
 an rteval run is completed, a statisical analysis of the results is
 done, an XML file is generated, containing system state, raw result
-data and statistical analysis results and optionally the XML is sent
-by XML-RPC to a database for reporting.
+data and statistical analysis results.
 
 The Load Applications
 ---------------------
@@ -228,18 +227,3 @@ A --numa option was added to the cyclictest program to use the libnuma
 library to bind threads to local memory nodes and allocate memory on
 the closest memory node, so to minimize the time required to access
 memory. 
-
-Further Development
--------------------
-
-Once we started getting rteval run information it was natural that we
-would want to store it in a database for further analysis (especially
-watching for performance regressions). David Sommerseth created a set
-of tables for a PostgreSQL database and then added an option to rteval
-to ship the results back to a database server using XML-RPC. This
-option is currently used internally at Red Hat do ship rteval run data
-back to our internal DB server. There are no plans to open this data
-up to the public, but the XML-RPC code is there if someone else wants
-to use the facility. (No, there are no backdoors in the code that ship
-run data back to Red Hat; it's Python code, look and see!). 
-
