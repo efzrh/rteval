@@ -331,29 +331,32 @@ if __name__ == '__main__':
 
         ldcfg = config.GetSection('loads')
         msrcfg = config.GetSection('measurement')
+        # Remember if cpulists were explicitly set by the user before running
+        # parse_cpulist_from_config, which generates default value for them
         msrcfg_cpulist_present = msrcfg.cpulist != ""
-        # Parse measurement cpulist using parse_cpulist_from_config to account for run-on-isolcpus
-        # and relative cpusets
+        ldcfg_cpulist_present = ldcfg.cpulist != ""
+        # Parse cpulists using parse_cpulist_from_config to account for
+        # run-on-isolcpus and relative cpusets
         cpulist = parse_cpulist_from_config(msrcfg.cpulist, msrcfg.run_on_isolcpus)
         if msrcfg_cpulist_present and not cpulist_utils.is_relative(msrcfg.cpulist) and msrcfg.run_on_isolcpus:
             logger.log(Log.WARN, "ignoring --measurement-run-on-isolcpus, since cpulist is specified")
         msrcfg.cpulist = collapse_cpulist(cpulist)
-        if ldcfg.cpulist:
-            ldcfg.cpulist = remove_offline(ldcfg.cpulist)
+        cpulist = parse_cpulist_from_config(ldcfg.cpulist)
+        ldcfg.cpulist = collapse_cpulist(cpulist)
         # if we only specified one set of cpus (loads or measurement)
         # default the other to the inverse of the specified list
-        if not ldcfg.cpulist and msrcfg_cpulist_present:
+        if not ldcfg_cpulist_present and msrcfg_cpulist_present:
             tmplist = expand_cpulist(msrcfg.cpulist)
             tmplist = SysTopology().invert_cpulist(tmplist)
             tmplist = cpulist_utils.online_cpulist(tmplist)
             ldcfg.cpulist = collapse_cpulist(tmplist)
-        if not msrcfg_cpulist_present and ldcfg.cpulist:
+        if not msrcfg_cpulist_present and ldcfg_cpulist_present:
             tmplist = expand_cpulist(ldcfg.cpulist)
             tmplist = SysTopology().invert_cpulist(tmplist)
             tmplist = cpulist_utils.online_cpulist(tmplist)
             msrcfg.cpulist = collapse_cpulist(tmplist)
 
-        if ldcfg.cpulist:
+        if ldcfg_cpulist_present:
             logger.log(Log.DEBUG, f"loads cpulist: {ldcfg.cpulist}")
         # if --onlyload is specified msrcfg.cpulist is unused
         if msrcfg_cpulist_present and not rtevcfg.onlyload:
