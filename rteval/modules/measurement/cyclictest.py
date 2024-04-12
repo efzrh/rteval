@@ -16,10 +16,8 @@ import math
 import libxml2
 from rteval.Log import Log
 from rteval.modules import rtevalModulePrototype
-from rteval.systopology import cpuinfo, parse_cpulist_from_config
-import rteval.cpulist_utils as cpulist_utils
-
-expand_cpulist = cpulist_utils.expand_cpulist
+from rteval.systopology import cpuinfo, SysTopology
+from rteval.cpulist_utils import expand_cpulist, collapse_cpulist
 
 class RunData:
     '''class to keep instance data from a cyclictest run'''
@@ -190,10 +188,11 @@ class Cyclictest(rtevalModulePrototype):
         # Create a RunData object per CPU core
         self.__numanodes = int(self.__cfg.setdefault('numanodes', 0))
         self.__priority = int(self.__cfg.setdefault('priority', 95))
-        self.__buckets = int(self.__cfg.setdefault('buckets', 2000))
+        default_buckets = ModuleParameters()["buckets"]["default"]
+        self.__buckets = int(self.__cfg.setdefault('buckets', default_buckets))
         self.__numcores = 0
         self.__cyclicdata = {}
-        self.__cpulist = self.__cfg.cpulist
+        self.__cpulist = self.__cfg.setdefault('cpulist', "")
         self.__cpus = [str(c) for c in expand_cpulist(self.__cpulist)]
         self.__numcores = len(self.__cpus)
 
@@ -393,14 +392,13 @@ class Cyclictest(rtevalModulePrototype):
         return rep_n
 
 
-
 def ModuleInfo():
     return {"parallel": True,
             "loads": True}
 
 
-
 def ModuleParameters():
+    """ default parameters """
     return {"interval": {"descr": "Base interval of the threads in microseconds",
                          "default": 100,
                          "metavar": "INTV_US"},
@@ -421,6 +419,7 @@ def ModuleParameters():
 
 
 def create(params, logger):
+    """ Instantiate a Cyclictest measurement module object """
     return Cyclictest(params, logger)
 
 
@@ -438,9 +437,7 @@ if __name__ == '__main__':
     cfg.AppendConfig('cyclictest', prms)
 
     cfg_ct = cfg.GetSection('cyclictest')
-    cfg_ct.reportdir = "."
-    cfg_ct.buckets = 200
-    # cfg_ct.breaktrace = 30
+    cfg_ct.cpulist = collapse_cpulist(SysTopology().online_cpus())
 
     runtime = 10
 
