@@ -25,7 +25,7 @@ class RunData:
         self.__id = coreid
         self.__type = datatype
         self.__priority = int(priority)
-        self.__description = ''
+        self.description = ''
         # histogram of data
         self.__samples = {}
         self.__numsamples = 0
@@ -130,7 +130,7 @@ class RunData:
     def MakeReport(self):
         rep_n = libxml2.newNode(self.__type)
         if self.__type == 'system':
-            rep_n.newProp('description', self.__description)
+            rep_n.newProp('description', self.description)
         else:
             rep_n.newProp('id', str(self.__id))
             rep_n.newProp('priority', str(self.__priority))
