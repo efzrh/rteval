@@ -61,12 +61,6 @@ class RunData:
         if value < self.__min:
             self.__min = value
 
-    def sample(self, value):
-        self.__samples[value] += self.__samples.setdefault(value, 0) + 1
-        self.update_max(value)
-        self.update_min(value)
-        self.__numsamples += 1
-
     def bucket(self, index, value):
         self.__samples[index] = self.__samples.setdefault(index, 0) + value
         if value:
