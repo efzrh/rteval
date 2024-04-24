@@ -248,7 +248,7 @@ class Kcompile(CommandLineLoad):
 
         # clean up any damage from previous runs
         try:
-            cmd = ["make", "-C", self.mydir, "mrproper"]
+            cmd = ["make", "-C", self.mydir, "-j", str(os.cpu_count()), "mrproper"]
             ret = subprocess.call(cmd, stdin=null, stdout=out, stderr=err)
             if ret:
                 # if the above make failed, remove and reinstall the source tree
