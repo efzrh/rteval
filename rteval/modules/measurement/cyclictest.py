@@ -80,26 +80,34 @@ class RunData:
             return
 
         self._log(Log.INFO, f"reducing {self.__id}")
-        total = 0
+        total = 0 # total number of samples
+        total_us = 0
         keys = list(self.__samples.keys())
         keys.sort()
 
-        mid = self.__numsamples / 2
+        # if numsamples is odd, then + 1 gives us the actual mid
+        # if numsamples is even, we avg mid and mid + 1, so we actually
+        # want to know mid + 1 since we will combine it with mid and
+        # the lastkey if the last key is at the end of a previous bucket
+        mid = int(self.__numsamples / 2) + 1
 
         # mean, mode, and median
         occurances = 0
         lastkey = -1
         for i in keys:
-            if mid > total and mid <= (total + self.__samples[i]):
-                if self.__numsamples & 1 and mid == total+1:
+            if mid > total and mid <= total + self.__samples[i]:
+                # Test if numsamples is even and if mid+1 is the next bucket
+                if self.__numsamples & 1 != 0 and mid == total+1:
                     self.__median = (lastkey + i) / 2
                 else:
                     self.__median = i
-            total += (i * self.__samples[i])
+            lastkey = i
+            total += self.__samples[i]
+            total_us += (i * self.__samples[i])
             if self.__samples[i] > occurances:
                 occurances = self.__samples[i]
                 self.__mode = i
-        self.__mean = float(total) / float(self.__numsamples)
+        self.__mean = float(total_us) / float(self.__numsamples)
 
         # range
         for i in keys:
