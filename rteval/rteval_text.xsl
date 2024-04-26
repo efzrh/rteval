@@ -201,11 +201,11 @@
     <!--                                                                        -->
     <!--       select="cyclictest|new_foo_section|another_section"              -->
     <!--                                                                        -->
-    <xsl:apply-templates select="cyclictest|hwlatdetect[@format='1.0']|sysstat"/>
+    <xsl:apply-templates select="cyclictest|timerlat|hwlatdetect[@format='1.0']|sysstat"/>
     <xsl:text>&#10;</xsl:text>
   </xsl:template>
 
-  <!-- Format the cyclic test section of the report -->
+  <!-- Format the cyclictest section of the report -->
   <xsl:template match="/rteval/Measurements/Profile/cyclictest">
     <xsl:text>       Latency test&#10;</xsl:text>
 
@@ -237,7 +237,7 @@
   </xsl:template>
 
 
-  <!--  Format the CPU core section in the cyclict test part -->
+  <!--  Format the CPU core section in the cyclictest part -->
   <xsl:template match="/rteval/Measurements/Profile/cyclictest/core">
     <xsl:text>          CPU core </xsl:text>
     <xsl:value-of select="@id"/>
@@ -252,6 +252,101 @@
 
   <!-- Generic formatting of statistics information -->
   <xsl:template match="/rteval/Measurements/Profile/cyclictest/*/statistics">
+    <xsl:text>            Samples:           </xsl:text>
+    <xsl:value-of select="samples"/>
+    <xsl:text>&#10;</xsl:text>
+
+    <xsl:if test="samples > 0">
+      <xsl:text>            Mean:              </xsl:text>
+      <xsl:value-of select="mean"/>
+      <xsl:value-of select="mean/@unit"/>
+      <xsl:text>&#10;</xsl:text>
+
+      <xsl:text>            Median:            </xsl:text>
+      <xsl:value-of select="median"/>
+      <xsl:value-of select="median/@unit"/>
+      <xsl:text>&#10;</xsl:text>
+
+      <xsl:text>            Mode:              </xsl:text>
+      <xsl:value-of select="mode"/>
+      <xsl:value-of select="mode/@unit"/>
+      <xsl:text>&#10;</xsl:text>
+
+      <xsl:text>            Range:             </xsl:text>
+      <xsl:value-of select="range"/>
+      <xsl:value-of select="range/@unit"/>
+      <xsl:text>&#10;</xsl:text>
+
+      <xsl:text>            Min:               </xsl:text>
+      <xsl:value-of select="minimum"/>
+      <xsl:value-of select="minimum/@unit"/>
+      <xsl:text>&#10;</xsl:text>
+
+      <xsl:text>            Max:               </xsl:text>
+      <xsl:value-of select="maximum"/>
+      <xsl:value-of select="maximum/@unit"/>
+      <xsl:text>&#10;</xsl:text>
+
+      <xsl:text>            Mean Absolute Dev: </xsl:text>
+      <xsl:value-of select="mean_absolute_deviation"/>
+      <xsl:value-of select="mean_absolute_deviation/@unit"/>
+      <xsl:text>&#10;</xsl:text>
+
+      <xsl:text>            Std.dev:           </xsl:text>
+      <xsl:value-of select="standard_deviation"/>
+      <xsl:value-of select="standard_deviation/@unit"/>
+      <xsl:text>&#10;</xsl:text>
+    </xsl:if>
+    <xsl:text>&#10;</xsl:text>
+  </xsl:template>
+
+  <!-- Format the timerlat section of the report -->
+  <xsl:template match="/rteval/Measurements/Profile/timerlat">
+    <xsl:text>       Latency test&#10;</xsl:text>
+
+    <xsl:text>          Started: </xsl:text>
+    <xsl:value-of select="timestamps/runloop_start"/>
+    <xsl:text>&#10;</xsl:text>
+
+    <xsl:text>          Stopped: </xsl:text>
+    <xsl:value-of select="timestamps/runloop_stop"/>
+    <xsl:text>&#10;</xsl:text>
+
+    <xsl:text>          Command: </xsl:text>
+    <xsl:value-of select="@command_line"/>
+    <xsl:text>&#10;&#10;</xsl:text>
+
+    <xsl:apply-templates select="abort_report"/>
+
+    <xsl:text>          System:  </xsl:text>
+    <xsl:value-of select="system/@description"/>
+    <xsl:text>&#10;</xsl:text>
+
+    <xsl:text>          Statistics: &#10;</xsl:text>
+    <xsl:apply-templates select="system/statistics"/>
+
+    <!-- Add CPU core info and stats-->
+    <xsl:apply-templates select="core">
+      <xsl:sort select="@id" data-type="number"/>
+    </xsl:apply-templates>
+  </xsl:template>
+
+
+  <!--  Format the CPU core section in the timerlat part -->
+  <xsl:template match="/rteval/Measurements/Profile/timerlat/core">
+    <xsl:text>          CPU core </xsl:text>
+    <xsl:value-of select="@id"/>
+    <xsl:text>       Priority: </xsl:text>
+    <xsl:value-of select="@priority"/>
+    <xsl:text>&#10;</xsl:text>
+    <xsl:text>          Statistics: </xsl:text>
+    <xsl:text>&#10;</xsl:text>
+    <xsl:apply-templates select="statistics"/>
+  </xsl:template>
+
+
+  <!-- Generic formatting of statistics information -->
+  <xsl:template match="/rteval/Measurements/Profile/timerlat/*/statistics">
     <xsl:text>            Samples:           </xsl:text>
     <xsl:value-of select="samples"/>
     <xsl:text>&#10;</xsl:text>
@@ -340,7 +435,7 @@
     <xsl:text>us&#10;</xsl:text>
   </xsl:template>
 
-  <!-- Format the cyclic test section of the report -->
+  <!-- Format the cyclictest section of the report -->
   <xsl:template match="/rteval/Measurements/Profile/sysstat">
     <xsl:text>       sysstat measurements&#10;</xsl:text>
 
