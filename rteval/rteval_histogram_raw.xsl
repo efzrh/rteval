@@ -12,8 +12,13 @@
 
     <!-- Extract overall system histogram data -->
     <xsl:apply-templates select="Measurements/Profile/cyclictest/system/histogram/bucket">
-      <xsl:with-param name="label" select="'system'"/> 
+      <xsl:with-param name="label" select="'system'"/>
       <xsl:sort select="Measurements/Profile/cyclictest/core/histogram/bucket/@index" data-type="number"/>
+    </xsl:apply-templates>
+
+    <xsl:apply-templates select="Measurements/Profile/timerlat/system/histogram/bucket">
+      <xsl:with-param name="label" select="'system'"/>
+      <xsl:sort select="Measurements/Profile/timerlat/core/histogram/bucket/@index" data-type="number"/>
     </xsl:apply-templates>
 
     <!-- Extract per cpu core histogram data -->
@@ -21,6 +26,12 @@
       <xsl:sort select="Measurements/Profile/cyclictest/core/@id" data-type="number"/>
       <xsl:sort select="Measurements/Profile/cyclictest/core/histogram/bucket/@index" data-type="number"/>
     </xsl:apply-templates>
+
+    <xsl:apply-templates select="Measurements/Profile/timerlat/core/histogram/bucket">
+      <xsl:sort select="Measurements/Profile/timerlat/core/@id" data-type="number"/>
+      <xsl:sort select="Measurements/Profile/timerlat/core/histogram/bucket/@index" data-type="number"/>
+    </xsl:apply-templates>
+
   </xsl:template>
   <!--                              -->
   <!-- End of main report framework -->
@@ -28,6 +39,22 @@
 
   <!-- Record formatting -->
   <xsl:template match="/rteval/Measurements/Profile/cyclictest/*/histogram/bucket">
+    <xsl:param name="label"/>
+    <xsl:choose>
+      <!-- If we don't have a id tag in what should be a 'core' tag, use the given label -->
+      <xsl:when test="../../@id"><xsl:value-of select="../../@id"/></xsl:when>
+      <xsl:otherwise><xsl:value-of select="$label"/></xsl:otherwise>
+    </xsl:choose>
+    <xsl:text>&#09;</xsl:text>
+
+    <xsl:value-of select="@index"/>
+    <xsl:text>&#09;</xsl:text>
+
+    <xsl:value-of select="@value"/>
+    <xsl:text>&#10;</xsl:text>
+  </xsl:template>
+
+  <xsl:template match="/rteval/Measurements/Profile/timerlat/*/histogram/bucket">
     <xsl:param name="label"/>
     <xsl:choose>
       <!-- If we don't have a id tag in what should be a 'core' tag, use the given label -->
