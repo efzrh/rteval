@@ -39,18 +39,18 @@
     <xsl:text>&#10;</xsl:text>
 
     <xsl:text>   Model:        </xsl:text>
-    <xsl:value-of select="SystemInfo/DMIinfo/HardwareInfo/GeneralInfo/Manufacturer|HardwareInfo/GeneralInfo/ProductName"/>
-    <xsl:text> - </xsl:text><xsl:value-of select="SystemInfo/DMIinfo/HardwareInfo/GeneralInfo/ProductName|HardwareInfo/GeneralInfo/ProductName"/>
+    <xsl:value-of select="SystemInfo/DMIinfo/Handle[@name='System Information']/Field[@Name='Manufacturer']"/>
+    <xsl:text> - </xsl:text><xsl:value-of select="SystemInfo/DMIinfo/Handle[@name='System Information']/Field[@Name='Product Name']"/>
     <xsl:text>&#10;</xsl:text>
 
     <xsl:text>   BIOS version: </xsl:text>
-    <xsl:value-of select="SystemInfo/DMIinfo/HardwareInfo/BIOS|HardwareInfo/BIOS"/>
+    <xsl:value-of select="SystemInfo/DMIinfo/Handle[@name='BIOS Information']/Field[@Name='Vendor']"/>
     <xsl:text> (ver: </xsl:text>
-    <xsl:value-of select="SystemInfo/DMIinfo/HardwareInfo/BIOS/@Version|HardwareInfo/BIOS/@Version"/>
-    <xsl:text>, rev :</xsl:text>
-    <xsl:value-of select="SystemInfo/DMIinfo/HardwareInfo/BIOS/@BIOSrevision|HardwareInfo/BIOS/@BIOSrevision"/>
+    <xsl:value-of select="SystemInfo/DMIinfo/Handle[@name='BIOS Information']/Field[@Name='Version']"/>
+    <xsl:text>, rev: </xsl:text>
+    <xsl:value-of select="SystemInfo/DMIinfo/Handle[@name='BIOS Information']/Field[@Name='BIOS Revision']"/>
     <xsl:text>, release date: </xsl:text>
-    <xsl:value-of select="SystemInfo/DMIinfo/HardwareInfo/BIOS/@ReleaseDate|HardwareInfo/BIOS/@ReleaseDate"/>
+    <xsl:value-of select="SystemInfo/DMIinfo/Handle[@name='BIOS Information']/Field[@Name='Release Date']"/>
     <xsl:text>)</xsl:text>
     <xsl:text>&#10;&#10;</xsl:text>
 
