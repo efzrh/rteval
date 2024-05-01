@@ -115,7 +115,7 @@ class RunData:
                 low = i
                 break
         high = keys[-1]
-        while high and self.__samples[high] == 0:
+        while high and self.__samples.setdefault(high, 0) == 0:
             high -= 1
         self.__range = high - low
 
