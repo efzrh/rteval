@@ -62,6 +62,11 @@ class rtevalModulePrototype(threading.Thread):
         return self._exclusive
 
 
+    def set_exclusive(self):
+        """ Sets This module to run alone """
+        self._exclusive = True
+
+
     def set_donotrun(self):
         """ set a module's donotrun field to True """
         self._donotrun = True
