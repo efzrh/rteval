@@ -4,4 +4,4 @@
 #   Copyright 2012 - 2013   David Sommerseth <davids@redhat.com>
 #
 
-RTEVAL_VERSION = '3.7'
+RTEVAL_VERSION = '3.8'
