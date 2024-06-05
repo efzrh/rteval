@@ -63,6 +63,9 @@ for example to execute a ten minute run of rteval:
 .B \-v, \-\-verbose
 Increase the verbosity of output during the test run
 .TP
+.B \-q, \-\-quiet
+Set rteval to run in quiet mode.
+.TP
 .B \-w WORKDIR, \-\-workdir=WORKDIR
 Tell rteval to change directory to WORKDIR before creating any
 subdirectories for report files. The default WORKDIR is the directory
@@ -71,11 +74,8 @@ in which rteval was started.
 .B \-l LOADDIR, \-\-loaddir=LOADDIR
 Tell rteval where to find the source for the loads
 .TP
-.B \-\-loads\-cpulist=CPULIST
-List of CPUs where loads will run
-.TP
-.B \-\-measurement-cpulist=CPULIST
-List of CPUs where measurement applciation will run
+.B \-i INSTALLDIR, \-\-installdir=INSTALLDIR
+Tell rteval where to locate installed templates.
 .TP
 .B \-s, \-\-sysreport
 Have rteval run the sysreport utility after a run to gather
@@ -103,11 +103,25 @@ Log the output of the loads in the report directory
 .B \-O, \-\-onlyload
 Only run the loads (don't run measurement threads)
 .TP
+.B \-V, \-\-version
+Print rteval version and exit.
+.TP
 .B \-S KERNEL_VERSION, \-\-source\-download=KERNEL_VERSION
 download a source kernel from kernel.org and exit
 
+.SH GROUP OPTIONS
+.TP
+.B \-\-loads\-cpulist=CPULIST
+List of CPUs where loads will run
+.TP
+.B \-\-measurement-cpulist=CPULIST
+List of CPUs where measurement application will run
+.TP
+.B \-\-measurement-run-on-isolcpus
+Include isolated CPUs in default cpulist
 
-.SH MODULE OPTIONS
+
+.SH CYCLICTEST OPTIONS
 These are options that affect the execution behavior of the measurement and load modules.
 .TP
 .B \-\-cyclictest-priority=PRIORITY
@@ -116,21 +130,23 @@ SCHED_FIFO priority for measurement threads (default: 95)
 .B \-\-cyclictest-interval=INTERVAL
 Measurement thread interval in microseconds (default: 100)
 .TP
-.B \-\-cyclictest-distance=DISTANCE
-Interval increment in microseconds (default: 0)
-.TP
 .B \-\-cyclictest-buckets=NBUCKETS
 Number of 1 microsecond histogram buckets (default: 3500)
 .TP
-.B \-\-hackbench-jobspercore=N
-Number of jobs per online-core for hackbench load
+.B \-\-cyclictest-breaktrace=USEC
+Send a break trace command if latency exceeds the given number of microseconds.
 .TP
-.B \-\-kcompile-jobspercore=N
-Number of jobs per online-core for kernel compile load
-.\" .SH SEE ALSO
-.\" .BR bar (1),
-.\" .BR baz (1).
-.\" .br
+.B \-\-cyclictest-threshold=USEC
+Exit rteval if latency exceeds the given number of microseconds.
+.TP
+.B \-\-stressng-option=OPTION
+Pass in command line options for the stress-ng package.
+.TP
+.B \-\-stressng-arg=ARG
+Pass in command line arguments for the stress-ng package.
+.TP
+.B \-\-stressng-timeout=T
+Timeout after T seconds.
 
 .SH FILES
 .BR rteval-YYYYMMDD-S
