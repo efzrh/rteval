@@ -148,6 +148,9 @@ measurement profiles, based on their characteristics"""
         modcfg = self.__cfg.GetSection("measurement")
         cpulist = modcfg.cpulist
         run_on_isolcpus = modcfg.run_on_isolcpus
+        if cpulist is None:
+            # Get default cpulist value
+            cpulist = cpulist_utils.collapse_cpulist(parse_cpulist_from_config("", run_on_isolcpus))
 
         for (modname, modtype) in modcfg:
             if isinstance(modtype, str) and modtype.lower() == 'module':  # Only 'module' will be supported (ds)
