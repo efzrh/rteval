@@ -154,8 +154,8 @@
     <xsl:value-of select="SystemInfo/cmdlineInfo/cmdline"/>
     <xsl:text>&#10;</xsl:text>
 
-    <!-- Generate a summary report for all measurement profiles -->
-    <xsl:apply-templates select="Measurements/Profile"/>
+    <!-- Generate a summary report for all measurement modules -->
+    <xsl:apply-templates select="Measurements"/>
    <xsl:text>  ===================================================================&#10;</xsl:text>
 </xsl:template>
   <!--                              -->
@@ -178,21 +178,8 @@
   </xsl:template>
 
 
-  <xsl:template match="/rteval/Measurements/Profile">
-    <xsl:text>   Measurement profile </xsl:text>
-    <xsl:value-of select="position()"/><xsl:text>: </xsl:text>
-    <xsl:choose>
-      <xsl:when test="@loads = '1'"><xsl:text>With loads, </xsl:text></xsl:when>
-      <xsl:otherwise><xsl:text>Without loads, </xsl:text></xsl:otherwise>
-    </xsl:choose>
-    <xsl:choose>
-      <xsl:when test="@parallel = '1'">
-        <xsl:text>measurements in parallel</xsl:text>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:text>measurements serialised</xsl:text>
-      </xsl:otherwise>
-    </xsl:choose>
+  <xsl:template match="/rteval/Measurements">
+    <xsl:text>   Measurements: </xsl:text>
     <xsl:text>&#10;</xsl:text>
 
     <!-- Format other sections of the report, if they are found                 -->
@@ -206,7 +193,7 @@
   </xsl:template>
 
   <!-- Format the cyclictest section of the report -->
-  <xsl:template match="/rteval/Measurements/Profile/cyclictest">
+  <xsl:template match="/rteval/Measurements/cyclictest">
     <xsl:text>       Latency test&#10;</xsl:text>
 
     <xsl:text>          Started: </xsl:text>
@@ -238,7 +225,7 @@
 
 
   <!--  Format the CPU core section in the cyclictest part -->
-  <xsl:template match="/rteval/Measurements/Profile/cyclictest/core">
+  <xsl:template match="/rteval/Measurements/cyclictest/core">
     <xsl:text>          CPU core </xsl:text>
     <xsl:value-of select="@id"/>
     <xsl:text>       Priority: </xsl:text>
@@ -251,7 +238,7 @@
 
 
   <!-- Generic formatting of statistics information -->
-  <xsl:template match="/rteval/Measurements/Profile/cyclictest/*/statistics">
+  <xsl:template match="/rteval/Measurements/cyclictest/*/statistics">
     <xsl:text>            Samples:           </xsl:text>
     <xsl:value-of select="samples"/>
     <xsl:text>&#10;</xsl:text>
@@ -301,7 +288,7 @@
   </xsl:template>
 
   <!-- Format the timerlat section of the report -->
-  <xsl:template match="/rteval/Measurements/Profile/timerlat">
+  <xsl:template match="/rteval/Measurements/timerlat">
     <xsl:text>       Latency test&#10;</xsl:text>
 
     <xsl:text>          Started: </xsl:text>
@@ -345,7 +332,7 @@
 
 
   <!--  Format the CPU core section in the timerlat part -->
-  <xsl:template match="/rteval/Measurements/Profile/timerlat/core">
+  <xsl:template match="/rteval/Measurements/timerlat/core">
     <xsl:text>          CPU core </xsl:text>
     <xsl:value-of select="@id"/>
     <xsl:text>       Priority: </xsl:text>
@@ -358,7 +345,7 @@
 
 
   <!-- Generic formatting of statistics information -->
-  <xsl:template match="/rteval/Measurements/Profile/timerlat/*/statistics">
+  <xsl:template match="/rteval/Measurements/timerlat/*/statistics">
     <xsl:text>            Samples:           </xsl:text>
     <xsl:value-of select="samples"/>
     <xsl:text>&#10;</xsl:text>
@@ -409,7 +396,7 @@
 
 
   <!-- Format the hwlatdetect test section of the report -->
-  <xsl:template match="/rteval/Measurements/Profile/hwlatdetect[@format='1.0' and not(@aborted)]">
+  <xsl:template match="/rteval/Measurements/hwlatdetect[@format='1.0' and not(@aborted)]">
     <xsl:text>     Hardware latency detector&#10;</xsl:text>
 
     <xsl:text>       Run duration: </xsl:text>
@@ -434,12 +421,12 @@
     <xsl:apply-templates select="samples/sample"/>
   </xsl:template>
 
-  <xsl:template match="/rteval/Measurements/Profile/hwlatdetect[@format='1.0' and @aborted > 0]">
+  <xsl:template match="/rteval/Measurements/hwlatdetect[@format='1.0' and @aborted > 0]">
     <xsl:text>     Hardware latency detector&#10;</xsl:text>
     <xsl:text>        ** WARNING ** hwlatedect failed to run&#10;</xsl:text>
   </xsl:template>
 
-  <xsl:template match="/rteval/Measurements/Profile/hwlatdetect[@format='1.0']/samples/sample">
+  <xsl:template match="/rteval/Measurements/hwlatdetect[@format='1.0']/samples/sample">
     <xsl:text>         - @</xsl:text>
     <xsl:value-of select="@timestamp"/>
     <xsl:text>  </xsl:text>
@@ -448,7 +435,7 @@
   </xsl:template>
 
   <!-- Format the cyclictest section of the report -->
-  <xsl:template match="/rteval/Measurements/Profile/sysstat">
+  <xsl:template match="/rteval/Measurements/sysstat">
     <xsl:text>       sysstat measurements&#10;</xsl:text>
 
     <xsl:text>          Started: </xsl:text>

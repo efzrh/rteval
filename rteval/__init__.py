@@ -20,7 +20,7 @@ import time
 from datetime import datetime
 import sysconfig
 from rteval.modules.loads import LoadModules
-from rteval.modules.measurement import MeasurementModules, MeasurementProfile
+from rteval.modules.measurement import MeasurementModules
 from rteval.rtevalReport import rtevalReport
 from rteval.Log import Log
 from rteval import rtevalConfig
@@ -131,10 +131,8 @@ class RtEval(rtevalReport):
         self._measuremods.Setup(params)
 
 
-    def __RunMeasurementProfile(self, measure_profile):
+    def __RunMeasurement(self):
         global earlystop
-        if not isinstance(measure_profile, MeasurementProfile):
-            raise Exception("measure_profile is not an MeasurementProfile object")
 
         measure_start = None
         try:
@@ -155,15 +153,14 @@ class RtEval(rtevalReport):
                 print(f" with {self._sysinfo.mem_get_numa_nodes()} numa nodes")
             else:
                 print("")
-            cpulist = self._measuremods._MeasurementModules__cfg.GetSection("measurement").cpulist
+            cpulist = self._measuremods._cfg.GetSection("measurement").cpulist
             if cpulist:
                 print(f"started measurement threads on cores {cpulist}")
             else:
                 print(f"started measurement threads on {onlinecpus} cores")
             print(f"Run duration: {str(self.__rtevcfg.duration)} seconds")
 
-            # start the cyclictest thread
-            measure_profile.Start()
+            self._measuremods.Start()
 
             # Unleash the loads and measurement threads
             report_interval = int(self.__rtevcfg.report_interval)
@@ -172,7 +169,7 @@ class RtEval(rtevalReport):
                 nthreads = threading.active_count()
             else:
                 nthreads = None
-            measure_profile.Unleash()
+            self._measuremods.Unleash()
             measure_start = datetime.now()
 
             # wait for time to expire or thread to die
@@ -185,7 +182,7 @@ class RtEval(rtevalReport):
             load_avg_checked = 5
             while (currtime <= stoptime) and not stopsig.is_set():
                 stopsig.wait(min(stoptime - currtime, 60.0))
-                if not measure_profile.isAlive():
+                if not self._measuremods.isAlive():
                     stoptime = currtime
                     earlystop = True
                     self.__logger.log(Log.WARN,
@@ -218,7 +215,7 @@ class RtEval(rtevalReport):
 
         finally:
             # stop measurement threads
-            measure_profile.Stop()
+            self._measuremods.Stop()
 
             # stop the loads
             if self._loadmods:
@@ -227,7 +224,7 @@ class RtEval(rtevalReport):
         print(f"stopping run at {time.asctime()}")
 
         # wait for measurement modules to finish calculating stats
-        measure_profile.WaitForCompletion()
+        self._measuremods.WaitForCompletion()
 
         return measure_start
 
@@ -236,11 +233,7 @@ class RtEval(rtevalReport):
         """ Run the full measurement suite with reports """
         global earlystop
         rtevalres = 0
-        measure_start = None
-        for meas_prf in self._measuremods:
-            mstart = self.__RunMeasurementProfile(meas_prf)
-            if measure_start is None:
-                measure_start = mstart
+        measure_start = self.__RunMeasurement()
 
         self._report(measure_start, self.__rtevcfg.xslt_report)
         if self.__rtevcfg.sysreport:

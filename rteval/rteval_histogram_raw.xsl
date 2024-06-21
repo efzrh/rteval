@@ -11,25 +11,25 @@
     <xsl:text>core&#09;index&#09;value&#10;</xsl:text>
 
     <!-- Extract overall system histogram data -->
-    <xsl:apply-templates select="Measurements/Profile/cyclictest/system/histogram/bucket">
+    <xsl:apply-templates select="Measurements/cyclictest/system/histogram/bucket">
       <xsl:with-param name="label" select="'system'"/>
-      <xsl:sort select="Measurements/Profile/cyclictest/core/histogram/bucket/@index" data-type="number"/>
+      <xsl:sort select="Measurements/cyclictest/core/histogram/bucket/@index" data-type="number"/>
     </xsl:apply-templates>
 
-    <xsl:apply-templates select="Measurements/Profile/timerlat/system/histogram/bucket">
+    <xsl:apply-templates select="Measurements/timerlat/system/histogram/bucket">
       <xsl:with-param name="label" select="'system'"/>
-      <xsl:sort select="Measurements/Profile/timerlat/core/histogram/bucket/@index" data-type="number"/>
+      <xsl:sort select="Measurements/timerlat/core/histogram/bucket/@index" data-type="number"/>
     </xsl:apply-templates>
 
     <!-- Extract per cpu core histogram data -->
-    <xsl:apply-templates select="Measurements/Profile/cyclictest/core/histogram/bucket">
-      <xsl:sort select="Measurements/Profile/cyclictest/core/@id" data-type="number"/>
-      <xsl:sort select="Measurements/Profile/cyclictest/core/histogram/bucket/@index" data-type="number"/>
+    <xsl:apply-templates select="Measurements/cyclictest/core/histogram/bucket">
+      <xsl:sort select="Measurements/cyclictest/core/@id" data-type="number"/>
+      <xsl:sort select="Measurements/cyclictest/core/histogram/bucket/@index" data-type="number"/>
     </xsl:apply-templates>
 
-    <xsl:apply-templates select="Measurements/Profile/timerlat/core/histogram/bucket">
-      <xsl:sort select="Measurements/Profile/timerlat/core/@id" data-type="number"/>
-      <xsl:sort select="Measurements/Profile/timerlat/core/histogram/bucket/@index" data-type="number"/>
+    <xsl:apply-templates select="Measurements/timerlat/core/histogram/bucket">
+      <xsl:sort select="Measurements/timerlat/core/@id" data-type="number"/>
+      <xsl:sort select="Measurements/timerlat/core/histogram/bucket/@index" data-type="number"/>
     </xsl:apply-templates>
 
   </xsl:template>
@@ -38,7 +38,7 @@
   <!--                              -->
 
   <!-- Record formatting -->
-  <xsl:template match="/rteval/Measurements/Profile/cyclictest/*/histogram/bucket">
+  <xsl:template match="/rteval/Measurements/cyclictest/*/histogram/bucket">
     <xsl:param name="label"/>
     <xsl:choose>
       <!-- If we don't have a id tag in what should be a 'core' tag, use the given label -->
@@ -54,7 +54,7 @@
     <xsl:text>&#10;</xsl:text>
   </xsl:template>
 
-  <xsl:template match="/rteval/Measurements/Profile/timerlat/*/histogram/bucket">
+  <xsl:template match="/rteval/Measurements/timerlat/*/histogram/bucket">
     <xsl:param name="label"/>
     <xsl:choose>
       <!-- If we don't have a id tag in what should be a 'core' tag, use the given label -->

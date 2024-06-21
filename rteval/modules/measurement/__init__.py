@@ -8,43 +8,14 @@ from rteval.modules import RtEvalModules, ModuleContainer
 from rteval.systopology import parse_cpulist_from_config
 import rteval.cpulist_utils as cpulist_utils
 
-class MeasurementProfile(RtEvalModules):
-    """Keeps and controls all the measurement modules with the same measurement profile"""
-
-    def __init__(self, config, modules_root, logger):
-        self._module_type = "measurement"
-        self._module_config = "measurement"
-        self._report_tag = "Profile"
-        RtEvalModules.__init__(self, config, modules_root, logger)
-
-
-    def ImportModule(self, module):
-        "Imports an exported module from a ModuleContainer() class"
-        return self._ImportModule(module)
-
-
-    def Setup(self, modname):
-        "Instantiates and prepares a measurement module"
-
-        modobj = self._InstantiateModule(modname, self._cfg.GetSection(modname))
-        self._RegisterModuleObject(modname, modobj)
-
-
-class MeasurementModules:
-    """Class which takes care of all measurement modules and groups them into
-measurement profiles, based on their characteristics"""
+class MeasurementModules(RtEvalModules):
+    """Module container for measurement modules"""
 
     def __init__(self, config, logger):
-        self.__cfg = config
-        self.__logger = logger
-        self.__measureprofiles = []
-        self.__modules_root = "modules.measurement"
-        self.__iter_item = None
-
-        # Temporary module container, which is used to evalute measurement modules.
-        # This will container will be destroyed after Setup() has been called
-        self.__container = ModuleContainer(self.__modules_root, self.__logger)
-        self.__LoadModules(self.__cfg.GetSection("measurement"))
+        self._module_type = "measurement"
+        self._report_tag = "Measurements"
+        RtEvalModules.__init__(self, config, "modules.measurement", logger)
+        self.__LoadModules(self._cfg.GetSection("measurement"))
 
 
     def __LoadModules(self, modcfg):
@@ -54,37 +25,28 @@ measurement profiles, based on their characteristics"""
             # hope to eventually have different kinds but module is only on
             # for now (jcw)
             if m[1].lower() == 'module':
-                self.__container.LoadModule(m[0])
-
-
-    def GetProfile(self):
-        "Returns the appropriate MeasurementProfile object, based on the profile type"
-
-        for p in self.__measureprofiles:
-            return p
-        return None
-
+                self._LoadModule(m[0])
 
     def SetupModuleOptions(self, parser):
         "Sets up all the measurement modules' parameters for the option parser"
-        grparser = self.__container.SetupModuleOptions(parser, self.__cfg)
+        grparser = super().SetupModuleOptions(parser)
 
         # Set up options specific for measurement module group
         grparser.add_argument("--measurement-run-on-isolcpus",
                               dest="measurement___run_on_isolcpus",
                               action="store_true",
-                              default=self.__cfg.GetSection("measurement").setdefault("run-on-isolcpus", "false").lower()
+                              default=self._cfg.GetSection("measurement").setdefault("run-on-isolcpus", "false").lower()
                                       == "true",
                               help="Include isolated CPUs in default cpulist")
 
 
     def Setup(self, modparams):
-        "Loads all measurement modules and group them into different measurement profiles"
+        "Loads all measurement modules"
 
         if not isinstance(modparams, dict):
             raise TypeError("modparams attribute is not of a dictionary type")
 
-        modcfg = self.__cfg.GetSection("measurement")
+        modcfg = self._cfg.GetSection("measurement")
         cpulist = modcfg.cpulist
         run_on_isolcpus = modcfg.run_on_isolcpus
         if cpulist is None:
@@ -93,61 +55,20 @@ measurement profiles, based on their characteristics"""
 
         for (modname, modtype) in modcfg:
             if isinstance(modtype, str) and modtype.lower() == 'module':  # Only 'module' will be supported (ds)
-                self.__container.LoadModule(modname)
+                self._cfg.AppendConfig(modname, modparams)
+                self._cfg.AppendConfig(modname, {'cpulist':cpulist})
+                self._cfg.AppendConfig(modname, {'run-on-isolcpus':run_on_isolcpus})
 
-                # Get the correct measurement profile container for this module
-                mp = self.GetProfile()
-                if mp is None:
-                    # If not found, create a new measurement profile
-                    mp = MeasurementProfile(self.__cfg,
-                                            self.__modules_root, self.__logger)
-                    self.__measureprofiles.append(mp)
-
-                    # Export the module imported here and transfer it to the
-                    # measurement profile
-                    mp.ImportModule(self.__container.ExportModule(modname))
-
-                # Setup this imported module inside the appropriate measurement profile
-                self.__cfg.AppendConfig(modname, modparams)
-                self.__cfg.AppendConfig(modname, {'cpulist':cpulist})
-                self.__cfg.AppendConfig(modname, {'run-on-isolcpus':run_on_isolcpus})
-                mp.Setup(modname)
-
-        del self.__container
+                modobj = self._InstantiateModule(modname, self._cfg.GetSection(modname))
+                self._RegisterModuleObject(modname, modobj)
 
 
     def MakeReport(self):
-        "Generates an XML report for all measurement profiles"
+        rep_n = super().MakeReport()
 
-        # Get the reports from all meaurement modules in all measurement profiles
-        rep_n = libxml2.newNode("Measurements")
-        cpulist = self.__cfg.GetSection("measurement").cpulist
-        run_on_isolcpus = self.__cfg.GetSection("measurement").run_on_isolcpus
+        cpulist = self._cfg.GetSection("measurement").cpulist
+        run_on_isolcpus = self._cfg.GetSection("measurement").run_on_isolcpus
         cpulist = parse_cpulist_from_config(cpulist, run_on_isolcpus)
         rep_n.newProp("measurecpus", cpulist_utils.collapse_cpulist(cpulist))
 
-        for mp in self.__measureprofiles:
-            mprep_n = mp.MakeReport()
-            if mprep_n:
-                rep_n.addChild(mprep_n)
-
         return rep_n
-
-
-    def __iter__(self):
-        "Initiates an iteration loop for MeasurementProfile objects"
-
-        self.__iter_item = len(self.__measureprofiles)
-        return self
-
-
-    def __next__(self):
-        """Internal Python iterating method, returns the next
-MeasurementProfile object to be processed"""
-
-        if self.__iter_item == 0:
-            self.__iter_item = None
-            raise StopIteration
-
-        self.__iter_item -= 1
-        return self.__measureprofiles[self.__iter_item]
