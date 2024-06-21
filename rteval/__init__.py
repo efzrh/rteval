@@ -111,20 +111,21 @@ class RtEval(rtevalReport):
         except Exception as err:
             raise RuntimeError(f"Cannot create report directory (NFS with rootsquash on?) [{err}]]")
 
-        self.__logger.log(Log.INFO, "Preparing load modules")
-        params = {'workdir':self.__rtevcfg.workdir,
-                  'reportdir':self.__reportdir and self.__reportdir or "",
-                  'builddir':builddir,
-                  'srcdir':self.__rtevcfg.srcdir,
-                  'verbose': self.__rtevcfg.verbose,
-                  'debugging': self.__rtevcfg.debugging,
-                  'numcores':self._sysinfo.cpu_getCores(True),
-                  'logging':self.__rtevcfg.logging,
-                  'memsize':self._sysinfo.mem_get_size(),
-                  'numanodes':self._sysinfo.mem_get_numa_nodes(),
-                  'duration': float(self.__rtevcfg.duration),
-                  }
-        self._loadmods.Setup(params)
+        if self._loadmods:
+            self.__logger.log(Log.INFO, "Preparing load modules")
+            params = {'workdir':self.__rtevcfg.workdir,
+                      'reportdir':self.__reportdir and self.__reportdir or "",
+                      'builddir':builddir,
+                      'srcdir':self.__rtevcfg.srcdir,
+                      'verbose': self.__rtevcfg.verbose,
+                      'debugging': self.__rtevcfg.debugging,
+                      'numcores':self._sysinfo.cpu_getCores(True),
+                      'logging':self.__rtevcfg.logging,
+                      'memsize':self._sysinfo.mem_get_size(),
+                      'numanodes':self._sysinfo.mem_get_numa_nodes(),
+                      'duration': float(self.__rtevcfg.duration),
+                      }
+            self._loadmods.Setup(params)
 
         self.__logger.log(Log.INFO, "Preparing measurement modules")
         self._measuremods.Setup(params)
@@ -136,13 +137,11 @@ class RtEval(rtevalReport):
             raise Exception("measure_profile is not an MeasurementProfile object")
 
         measure_start = None
-        (with_loads, run_parallel) = measure_profile.GetProfile()
-        self.__logger.log(Log.INFO, f"Using measurement profile [loads: {with_loads}  parallel: {run_parallel}]")
         try:
             nthreads = 0
 
             # start the loads
-            if with_loads:
+            if self._loadmods:
                 self._loadmods.Start()
 
             print(f"rteval run on {os.uname()[2]} started at {time.asctime()}")
@@ -168,7 +167,7 @@ class RtEval(rtevalReport):
 
             # Unleash the loads and measurement threads
             report_interval = int(self.__rtevcfg.report_interval)
-            if with_loads:
+            if self._loadmods:
                 self._loadmods.Unleash()
                 nthreads = threading.active_count()
             else:
@@ -192,7 +191,7 @@ class RtEval(rtevalReport):
                     self.__logger.log(Log.WARN,
                                       "Measurement threads did not use the full time slot. Doing a controlled stop.")
 
-                if with_loads:
+                if nthreads:
                     if threading.active_count() < nthreads:
                         raise RuntimeError("load thread died!")
 
@@ -222,7 +221,7 @@ class RtEval(rtevalReport):
             measure_profile.Stop()
 
             # stop the loads
-            if with_loads:
+            if self._loadmods:
                 self._loadmods.Stop()
 
         print(f"stopping run at {time.asctime()}")

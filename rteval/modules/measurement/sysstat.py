@@ -93,13 +93,6 @@ class sysstat(rtevalModulePrototype):
 
 
 
-def ModuleInfo():
-    # sysstat features - run in parallel with outher measurement modules with loads
-    return {"parallel": True,
-            "loads": True}
-
-
-
 def ModuleParameters():
     return {}  # No arguments available
 

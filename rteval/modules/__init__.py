@@ -269,14 +269,6 @@ reference from the first import"""
             return mod
 
 
-    def ModuleInfo(self, modname, modroot=None):
-        """Imports a module and calls the modules' ModuleInfo() function and returns
-the information provided by the module"""
-
-        mod = self.LoadModule(modname, modroot)
-        return mod.ModuleInfo()
-
-
     def SetupModuleOptions(self, parser, config):
         """Sets up a separate argparse ArgumentGroup per module with its supported parameters"""
 
@@ -495,9 +487,8 @@ class RtEvalModules:
 
 
     def Unleash(self):
-        """Unleashes all the loaded modules workloads"""
+        """Unleashes all the loaded modules"""
 
-        # turn loose the loads
         nthreads = 0
         self._logger.log(Log.INFO, f"Sending start event to all {self._module_type} modules")
         for (modname, mod) in self.__modules:
@@ -508,7 +499,7 @@ class RtEvalModules:
         return nthreads
 
 
-    def _isAlive(self):
+    def isAlive(self):
         """Returns True if all modules are running"""
 
         for (modname, mod) in self.__modules:

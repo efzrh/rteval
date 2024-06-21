@@ -11,22 +11,11 @@ import rteval.cpulist_utils as cpulist_utils
 class MeasurementProfile(RtEvalModules):
     """Keeps and controls all the measurement modules with the same measurement profile"""
 
-    def __init__(self, config, with_load, run_parallel, modules_root, logger):
-        self.__with_load = with_load
-        self.__run_parallel = run_parallel
-
-        # Only used when running modules serialised
-        self.__run_serialised_mods = None
-
+    def __init__(self, config, modules_root, logger):
         self._module_type = "measurement"
         self._module_config = "measurement"
         self._report_tag = "Profile"
         RtEvalModules.__init__(self, config, modules_root, logger)
-
-
-    def GetProfile(self):
-        "Returns the profile characteristic as (with_load, run_parallel)"
-        return (self.__with_load, self.__run_parallel)
 
 
     def ImportModule(self, module):
@@ -39,54 +28,6 @@ class MeasurementProfile(RtEvalModules):
 
         modobj = self._InstantiateModule(modname, self._cfg.GetSection(modname))
         self._RegisterModuleObject(modname, modobj)
-
-
-    def Unleash(self):
-        """Unleashes all the measurement modules"""
-
-        if self.__run_parallel:
-            # Use the inherrited method if running
-            # measurements in parallel
-            return RtEvalModules.Unleash(self)
-
-        # Get a list of all registered modules,
-        # and start the first one
-        self.__serialised_mods = self.GetModulesList()
-        mod = self.GetNamedModuleObject(self.__serialised_mods[0])
-        mod.setStart()
-        return 1
-
-
-    def MakeReport(self):
-        "Generates an XML report for all run measurement modules in this profile"
-        rep_n = RtEvalModules.MakeReport(self)
-        rep_n.newProp("loads", self.__with_load and "1" or "0")
-        rep_n.newProp("parallel", self.__run_parallel and "1" or "0")
-        return rep_n
-
-
-    def isAlive(self):
-        """Returns True if all modules which are supposed to run runs"""
-
-        if self.__run_parallel:
-            return self._isAlive()
-
-        if self.__serialised_mods:
-            # If running serialised, first check if measurement is still running,
-            # if so - return True.
-            mod = self.GetNamedModuleObject(self.__serialised_mods[0])
-            if mod.WorkloadAlive():
-                return True
-
-            # If not, go to next on the list and kick it off
-            self.__serialised_mods.remove(self.__serialised_mods[0])
-            if self.__serialised_mods:
-                mod = self.GetNamedModuleObject(self.__serialised_mods[0])
-                mod.setStart()
-                return True
-
-        # If we've been through everything, nothing is running
-        return False
 
 
 class MeasurementModules:
@@ -116,13 +57,11 @@ measurement profiles, based on their characteristics"""
                 self.__container.LoadModule(m[0])
 
 
-    def GetProfile(self, with_load, run_parallel):
+    def GetProfile(self):
         "Returns the appropriate MeasurementProfile object, based on the profile type"
 
         for p in self.__measureprofiles:
-            mp = p.GetProfile()
-            if mp == (with_load, run_parallel):
-                return p
+            return p
         return None
 
 
@@ -154,15 +93,13 @@ measurement profiles, based on their characteristics"""
 
         for (modname, modtype) in modcfg:
             if isinstance(modtype, str) and modtype.lower() == 'module':  # Only 'module' will be supported (ds)
-                # Extract the measurement modules info
-                modinfo = self.__container.ModuleInfo(modname)
+                self.__container.LoadModule(modname)
 
                 # Get the correct measurement profile container for this module
-                mp = self.GetProfile(modinfo["loads"], modinfo["parallel"])
+                mp = self.GetProfile()
                 if mp is None:
                     # If not found, create a new measurement profile
                     mp = MeasurementProfile(self.__cfg,
-                                            modinfo["loads"], modinfo["parallel"],
                                             self.__modules_root, self.__logger)
                     self.__measureprofiles.append(mp)
 

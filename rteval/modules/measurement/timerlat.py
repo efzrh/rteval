@@ -499,11 +499,6 @@ class Timerlat(rtevalModulePrototype):
         return rep_n
 
 
-def ModuleInfo():
-    """ Required measurement module information """
-    return {"parallel": True,
-            "loads": True}
-
 def ModuleParameters():
     """ default parameters """
     return {"priority": {"descr": "Run rtla timerlat with this priority",

@@ -394,11 +394,6 @@ class Cyclictest(rtevalModulePrototype):
         return rep_n
 
 
-def ModuleInfo():
-    return {"parallel": True,
-            "loads": True}
-
-
 def ModuleParameters():
     """ default parameters """
     return {"interval": {"descr": "Base interval of the threads in microseconds",
