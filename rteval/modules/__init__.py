@@ -40,6 +40,7 @@ class rtevalModulePrototype(threading.Thread):
                          "finished": threading.Event()}
         self._donotrun = False
         self._exclusive = False
+        self._latency = False
         self.__timestamps = {}
         self.__sleeptime = 2.0
 
@@ -65,6 +66,11 @@ class rtevalModulePrototype(threading.Thread):
     def set_exclusive(self):
         """ Sets This module to run alone """
         self._exclusive = True
+
+
+    def set_latency(self):
+        """ Sets the module as an exclusive latency measurer """
+        self._latency = True
 
 
     def set_donotrun(self):
@@ -412,9 +418,14 @@ class RtEvalModules:
 
         self._logger.log(Log.INFO, f"Preparing {self._module_type} modules")
         exclusive = 0
+        latency = False
         for (modname, mod) in self.__modules:
             if mod.is_exclusive() and mod.WorkloadWillRun():
                 exclusive += 1
+            if mod._latency:
+                if latency:
+                    raise RuntimeError("More than one exclusive latency test")
+                latency = True
         for (modname, mod) in self.__modules:
             if exclusive >= 1:
                 if exclusive != 1:
