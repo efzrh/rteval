@@ -316,14 +316,26 @@
     <xsl:value-of select="@command_line"/>
     <xsl:text>&#10;&#10;</xsl:text>
 
-    <xsl:apply-templates select="abort_report"/>
+    <xsl:if test="stoptrace_invoked">
+     <xsl:text>rtla timerlat hit stop tracing</xsl:text>
+     <xsl:text>
+</xsl:text>
+    <xsl:apply-templates select="stoptrace_report"/>
+    <xsl:apply-templates select="max_timerlat_report"/>
+    </xsl:if>
 
+    <!-- Make sure the description is available before printing System: -->
+    <xsl:if test="system/@description">
     <xsl:text>          System:  </xsl:text>
     <xsl:value-of select="system/@description"/>
     <xsl:text>&#10;</xsl:text>
+    </xsl:if>
 
+    <!-- If stoptrace_invoked is true, no Statistics are available -->
+    <xsl:if test="stoptrace_invoked != true">
     <xsl:text>          Statistics: &#10;</xsl:text>
     <xsl:apply-templates select="system/statistics"/>
+    </xsl:if>
 
     <!-- Add CPU core info and stats-->
     <xsl:apply-templates select="core">
@@ -468,6 +480,173 @@
         <xsl:value-of select="breaktrace/@measured_latency"/>
         <xsl:text>us.&#10;&#10;</xsl:text>
       </xsl:if>
+  </xsl:template>
+
+  <!-- Format posttrace information if present -->
+  <xsl:template match="stoptrace_report">
+     <xsl:text>## CPU </xsl:text>
+     <xsl:value-of select="@CPU"/>
+     <xsl:text> hit stop tracing, analyzing it ##</xsl:text>
+     <xsl:text>
+</xsl:text>
+
+
+     <xsl:if test="Previous_IRQ_interference">
+     <xsl:text>Previous IRQ interference:			 up to       </xsl:text>
+     <xsl:value-of select="Previous_IRQ_interference"/>
+     <xsl:text> </xsl:text>
+     <xsl:value-of select="Previous_IRQ_interference/@unit"/>
+     <xsl:text>
+</xsl:text>
+     </xsl:if>
+
+     <xsl:if test="IRQ_handler_delay">
+     <xsl:text>IRQ handler delay:		                	</xsl:text>
+     <xsl:value-of select="IRQ_handler_delay/latency"/>
+     <xsl:text> </xsl:text>
+     <xsl:value-of select="IRQ_handler_delay/latency/@unit"/>
+     <xsl:text> (</xsl:text>
+     <xsl:value-of select="IRQ_handler_delay/latency_percent"/>
+     <xsl:text> </xsl:text>
+     <xsl:value-of select="IRQ_handler_delay/latency_percent/@unit"/>
+     <xsl:text>)
+</xsl:text>
+     </xsl:if>
+
+     <xsl:if test="IRQ_handler_delay_exit_from_idle">
+     <xsl:text>IRQ handler delay:		(exit from idle)	</xsl:text>
+     <xsl:value-of select="IRQ_handler_delay_exit_from_idle/latency"/>
+     <xsl:text> </xsl:text>
+     <xsl:value-of select="IRQ_handler_delay_exit_from_idle/latency/@unit"/>
+     <xsl:text> (</xsl:text>
+     <xsl:value-of select="IRQ_handler_delay_exit_from_idle/latency_percent"/>
+     <xsl:text> </xsl:text>
+     <xsl:value-of select="IRQ_handler_delay_exit_from_idle/latency_percent/@unit"/>
+     <xsl:text>)
+</xsl:text>
+     </xsl:if>
+
+     <xsl:text>IRQ latency:</xsl:text>
+     <xsl:text>						</xsl:text>
+     <xsl:value-of select="IRQ_latency"/>
+     <xsl:text> </xsl:text>
+     <xsl:value-of select="IRQ_latency/@unit"/>
+     <xsl:text>
+</xsl:text>
+
+     <xsl:text>Timerlat IRQ duration:</xsl:text>
+     <xsl:text>					</xsl:text>
+     <xsl:value-of select="Timerlat_IRQ_duration/latency"/>
+     <xsl:text> </xsl:text>
+     <xsl:value-of select="Timerlat_IRQ_duration/latency/@unit"/>
+     <xsl:text> (</xsl:text>
+     <xsl:value-of select="Timerlat_IRQ_duration/latency_percent"/>
+     <xsl:text> </xsl:text>
+     <xsl:value-of select="Timerlat_IRQ_duration/latency_percent/@unit"/>
+     <xsl:text>)
+</xsl:text>
+
+     <xsl:if test="Blocking_Thread">
+     <xsl:text>Blocking thread:</xsl:text>
+     <xsl:text>					</xsl:text>
+     <xsl:value-of select="Blocking_Thread/latency"/>
+     <xsl:text> </xsl:text>
+     <xsl:value-of select="Blocking_Thread/latency/@unit"/>
+     <xsl:text> (</xsl:text>
+     <xsl:value-of select="Blocking_Thread/latency_percent"/>
+     <xsl:text> </xsl:text>
+     <xsl:value-of select="Blocking_Thread/latency_percent/@unit"/>
+     <xsl:text>)
+</xsl:text>
+     </xsl:if>
+
+     <xsl:for-each select="blocking_thread">
+	     <xsl:text>			</xsl:text>
+	     <xsl:value-of select="name"/>
+	     <xsl:text>			</xsl:text>
+	     <xsl:value-of select="latency"/>
+             <xsl:text> </xsl:text>
+	     <xsl:value-of select="latency/@unit"/>
+             <xsl:text>
+</xsl:text>
+     </xsl:for-each>
+
+     <xsl:if test="Softirq_interference">
+     <xsl:text>Softirq interference:</xsl:text>
+     <xsl:text>					</xsl:text>
+     <xsl:value-of select="Softirq_interference/latency"/>
+     <xsl:text> </xsl:text>
+     <xsl:value-of select="Softirq_interference/latency/@unit"/>
+     <xsl:text> (</xsl:text>
+     <xsl:value-of select="Softirq_interference/latency_percent"/>
+     <xsl:text> </xsl:text>
+     <xsl:value-of select="Softirq_interference/latency_percent/@unit"/>
+     <xsl:text>)
+</xsl:text>
+     </xsl:if>
+
+     <xsl:for-each select="softirq_interference">
+	     <xsl:text>			</xsl:text>
+	     <xsl:value-of select="name"/>
+	     <xsl:text>			</xsl:text>
+	     <xsl:value-of select="latency"/>
+             <xsl:text> </xsl:text>
+	     <xsl:value-of select="latency/@unit"/>
+             <xsl:text>
+</xsl:text>
+     </xsl:for-each>
+
+     <xsl:if test="IRQ_interference">
+     <xsl:text>IRQ interference:</xsl:text>
+     <xsl:text>					</xsl:text>
+     <xsl:value-of select="IRQ_interference/latency"/>
+     <xsl:text> </xsl:text>
+     <xsl:value-of select="IRQ_interference/latency/@unit"/>
+     <xsl:text> (</xsl:text>
+     <xsl:value-of select="IRQ_interference/latency_percent"/>
+     <xsl:text> </xsl:text>
+     <xsl:value-of select="IRQ_interference/latency_percent/@unit"/>
+     <xsl:text>)
+</xsl:text>
+     </xsl:if>
+
+     <xsl:for-each select="irq_interference">
+	     <xsl:text>			</xsl:text>
+	     <xsl:value-of select="name"/>
+	     <xsl:text>			</xsl:text>
+	     <xsl:value-of select="latency"/>
+             <xsl:text> </xsl:text>
+	     <xsl:value-of select="latency/@unit"/>
+             <xsl:text>
+</xsl:text>
+     </xsl:for-each>
+
+     <xsl:text>--------------------------------------------------------------------------------</xsl:text>
+     <xsl:text>Thread latency:</xsl:text>
+     <xsl:text>						</xsl:text>
+     <xsl:value-of select="Thread_latency/latency"/>
+     <xsl:text> </xsl:text>
+     <xsl:value-of select="Thread_latency/latency/@unit"/>
+     <xsl:text> (</xsl:text>
+     <xsl:value-of select="Thread_latency/latency_percent"/>
+     <xsl:text> </xsl:text>
+     <xsl:value-of select="Thread_latency/latency_percent/@unit"/>
+     <xsl:text>)
+
+</xsl:text>
+  </xsl:template>
+
+  <xsl:template match="max_timerlat_report">
+     <xsl:text>
+</xsl:text>
+     <xsl:text>Max timerlat IRQ latency from idle:</xsl:text>
+     <xsl:value-of select="Max_timerlat_IRQ_latency_from_idle"/>
+     <xsl:text> </xsl:text>
+     <xsl:value-of select="Max_timerlat_IRQ_latency_from_idle/@unit"/>
+     <xsl:text> in cpu </xsl:text>
+     <xsl:value-of select="@CPU"/>
+     <xsl:text>
+</xsl:text>
   </xsl:template>
 
 </xsl:stylesheet>
