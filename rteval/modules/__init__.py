@@ -333,34 +333,9 @@ returned when a ModuleContainer object is iterated over"""
         self.__modobjects[modname] = modobj
 
 
-    def ExportModule(self, modname, modroot=None):
-        "Export module info, used to transfer an imported module to another ModuleContainer"
-        if modroot is None:
-            modroot = self.__modules_root
-
-        mod = f"{modroot}.{modname}"
-        return (mod, self.__modsloaded[mod])
-
-
-    def ImportModule(self, module):
-        "Imports an exported module from another ModuleContainer"
-        (modname, moduleimp) = module
-        self.__modsloaded[modname] = moduleimp
-
-
     def ModulesLoaded(self):
         "Returns number of registered module objects"
         return len(self.__modobjects)
-
-
-    def GetModulesList(self):
-        "Returns a list of module names"
-        return list(self.__modobjects.keys())
-
-
-    def GetNamedModuleObject(self, modname):
-        "Looks up a named module and returns its registered module object"
-        return self.__modobjects[modname]
 
 
     def __iter__(self):
@@ -406,10 +381,6 @@ class RtEvalModules:
     # Export some of the internal module container methods
     # Primarily to have better control of the module containers
     # iteration API
-    def _ImportModule(self, module):
-        "Imports a module exported by ModuleContainer::ExportModule()"
-        return self.__modules.ImportModule(module)
-
     def _InstantiateModule(self, modname, modcfg, modroot=None):
         "Imports a module and returns an instantiated object from the module"
         return self.__modules.InstantiateModule(modname, modcfg, modroot)
@@ -426,17 +397,9 @@ class RtEvalModules:
         "Returns number of imported modules"
         return self.__modules.ModulesLoaded()
 
-    def GetModulesList(self):
-        "Returns a list of module names"
-        return self.__modules.GetModulesList()
-
     def SetupModuleOptions(self, parser):
         "Sets up argparse based argument groups for the loaded modules"
         return self.__modules.SetupModuleOptions(parser, self._cfg)
-
-    def GetNamedModuleObject(self, modname):
-        "Returns a list of module names"
-        return self.__modules.GetNamedModuleObject(modname)
     # End of exports
 
 
