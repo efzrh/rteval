@@ -79,7 +79,7 @@ class sysstat(rtevalModulePrototype):
         fp = open(self.__datafile, "rb")
         compr = bz2.BZ2Compressor(9)
         cmpr = compr.compress(fp.read())
-        data = base64.b64encode(cmpr + compr.flush())
+        data = base64.b64encode(cmpr + compr.flush()).decode('utf-8')
         data_n = rep_n.newTextChild(None, 'data', "\n"+"\n".join(textwrap.wrap(data, 75))+"\n")
         data_n.newProp('contents', 'sysstat/sar binary data')
         data_n.newProp('encoding', 'base64')
