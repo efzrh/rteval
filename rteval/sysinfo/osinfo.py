@@ -45,10 +45,16 @@ class OSInfo:
     def run_sysreport(self, repdir):
         if os.path.exists('/usr/sbin/sos'):
             exe = '/usr/sbin/sos report'
+        elif os.path.exists('/usr/bin/sos'):
+            exe = '/usr/bin/sos report'
         elif os.path.exists('/usr/sbin/sosreport'):
             exe = '/usr/sbin/sosreport'
+        elif os.path.exists('/usr/bin/sosreport'):
+            exe = '/usr/bin/sosreport'
         elif os.path.exists('/usr/sbin/sysreport'):
             exe = '/usr/sbin/sysreport'
+        elif os.path.exists('/usr/bin/sysreport'):
+            exe = '/usr/bin/sysreport'
         else:
             raise RuntimeError("Can't find sos/sosreport/sysreport")
 
