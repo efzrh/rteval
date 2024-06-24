@@ -546,16 +546,16 @@
      <xsl:text>)
 </xsl:text>
 
-     <xsl:if test="Blocking_Thread">
+     <xsl:if test="Blocking_thread">
      <xsl:text>Blocking thread:</xsl:text>
      <xsl:text>					</xsl:text>
-     <xsl:value-of select="Blocking_Thread/latency"/>
+     <xsl:value-of select="Blocking_thread/latency"/>
      <xsl:text> </xsl:text>
-     <xsl:value-of select="Blocking_Thread/latency/@unit"/>
+     <xsl:value-of select="Blocking_thread/latency/@unit"/>
      <xsl:text> (</xsl:text>
-     <xsl:value-of select="Blocking_Thread/latency_percent"/>
+     <xsl:value-of select="Blocking_thread/latency_percent"/>
      <xsl:text> </xsl:text>
-     <xsl:value-of select="Blocking_Thread/latency_percent/@unit"/>
+     <xsl:value-of select="Blocking_thread/latency_percent/@unit"/>
      <xsl:text>)
 </xsl:text>
      </xsl:if>

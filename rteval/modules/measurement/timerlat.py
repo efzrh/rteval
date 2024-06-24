@@ -273,12 +273,14 @@ class Timerlat(rtevalModulePrototype):
             os.kill(self.__timerlat_process.pid, signal.SIGINT)
             time.sleep(2)
 
+
+        # Parse histogram output
+        self.__timerlat_out.seek(0)
+
         blocking_thread_detected = False
         softirq_interference_detected = False
         irq_interference_detected = False
 
-        # Parse histogram output
-        self.__timerlat_out.seek(0)
         for line in self.__timerlat_out:
             line = bytes.decode(line)
 
@@ -291,6 +293,8 @@ class Timerlat(rtevalModulePrototype):
                 self.__posttrace += line
                 line = line.strip()
                 fields = line.split()
+                if not line:
+                    continue
                 if line.startswith("##") and fields[1] == "CPU":
                     self.stcpu = int(fields[2])
                     self._log(Log.DEBUG, f"self.stcpu = {self.stcpu}")
@@ -304,91 +308,59 @@ class Timerlat(rtevalModulePrototype):
                     softirq_interference_detected = False
                     irq_interference_detected = False
                     continue
-                if line.startswith("Thread latency:"):
-                    thread_latency_percent = fields[-1].strip('()%')
-                    self._log(Log.DEBUG, f"thread_latency_percent = {thread_latency_percent}")
-                    thread_latency = fields[-3]
-                    self._log(Log.DEBUG, f"thread_latency = {thread_latency}")
-                    self.__stdata[self.stcpu]["Thread_latency"] = (thread_latency, thread_latency_percent)
-                elif line.startswith("Previous IRQ interference"):
-                    self._log(Log.DEBUG, f'Previous_IRQ_interference = {fields[-2]}')
-                    self.__stdata[self.stcpu]["Previous_IRQ_interference"] = fields[-2]
-                elif line.startswith("IRQ handler delay:"):
-                    irq_handler_delay_percent = fields[-2].strip('(')
-                    irq_handler_delay = fields[-4]
-                    # Do we have (exit from idle)?
-                    if fields[3] == '(exit':
-                        field_name = "IRQ_handler_delay_exit_from_idle"
-                    else:
-                        field_name = "IRQ_handler_delay"
-                    self._log(Log.DEBUG, f"{field_name} = {irq_handler_delay}")
-                    self._log(Log.DEBUG, f"{field_name}_percent = {irq_handler_delay_percent}")
-                    self.__stdata[self.stcpu][field_name] = (irq_handler_delay, irq_handler_delay_percent)
-                elif line.startswith("IRQ latency:"):
-                    self._log(Log.DEBUG, f"irq_latency = {fields[-2]}")
-                    self.__stdata[self.stcpu]["IRQ_latency"] = fields[-2]
-                elif line.startswith("Timerlat IRQ duration"):
-                    timerlat_irq_duration_percent = fields[-2].strip('(')
-                    self._log(Log.DEBUG, f"timerlat_irq_duration_percent = {timerlat_irq_duration_percent}")
-                    timerlat_irq_duration = fields[-4]
-                    self._log(Log.DEBUG, f"timerlat_irq_duration = {timerlat_irq_duration}")
-                    self.__stdata[self.stcpu]["Timerlat_IRQ_duration"] = (timerlat_irq_duration, timerlat_irq_duration_percent)
-                elif line.startswith("Blocking thread:"):
-                    blocking_thread_percent = fields[-2].strip('(')
-                    self._log(Log.DEBUG, f"blocking_thread_percent = {blocking_thread_percent}")
-                    blocking_thread = fields[-4]
-                    self._log(Log.DEBUG, f"blocking_thread = {blocking_thread}")
-                    self.__stdata[self.stcpu]["Blocking_Thread"] = (blocking_thread, blocking_thread_percent)
-                    blocking_thread_detected = True
-                    irq_interference_detected = False
-                    softirq_interference_detected = False
-                elif line.startswith("IRQ interference"):
-                    irq_interference_percent = fields[-2].strip('(')
-                    self._log(Log.DEBUG, f"irq_interference_percent = {irq_interference_percent}")
-                    irq_interference = fields[-4]
-                    self._log(Log.DEBUG, f"irq_interference = {irq_interference}")
-                    self.__stdata[self.stcpu]["IRQ_interference"] = (irq_interference, irq_interference_percent)
-                    blocking_thread_detected = False
-                    irq_interference_detected = True
-                    softirq_interference_detected = False
-                elif line.startswith("Softirq interference"):
-                    softirq_interference_percent = fields[-2].strip('(')
-                    self._log(Log.DEBUG, f"softirq_interference_percent = {softirq_interference_percent}")
-                    softirq_interference = fields[-4]
-                    self._log(Log.DEBUG, f"softirq_interference = {softirq_interference}")
-                    self.__stdata[self.stcpu]["Softirq_interference"] = (softirq_interference, softirq_interference_percent)
-                    blocking_thread_detected = False
-                    irq_interference_detected = False
-                    softirq_interference_detected = True
-                elif blocking_thread_detected:
-                    self._log(Log.DEBUG, f'line={line}')
-                    blocking_thread = " ".join(fields[0:-2])
-                    self._log(Log.DEBUG, f"blocking_thread = {blocking_thread}")
-                    blocking_threadus = fields[-2]
-                    self._log(Log.DEBUG, f"blocking_threadus = {blocking_threadus}")
-                    self.__stdata[self.stcpu].setdefault("blocking_thread", [])
-                    self.__stdata[self.stcpu]["blocking_thread"] += [(blocking_thread, blocking_threadus)]
-                elif softirq_interference_detected:
-                    softirq = " ".join(fields[0:-2])
-                    softirq_latency = fields[-2]
-                    self._log(Log.DEBUG, f'softirq = {softirq}')
-                    self._log(Log.DEBUG, f'softirq_latency = {softirq_latency}')
-                    self.__stdata[self.stcpu].setdefault("softirq_interference", [])
-                    self.__stdata[self.stcpu]["softirq_interference"] += [(softirq, softirq_latency)]
-                elif irq_interference_detected:
-                    irq_interference_name = " ".join(fields[0:-2])
-                    irq_interference_latency = fields[-2]
-                    self._log(Log.DEBUG, f'irq_interference = {irq_interference_name}, latency = {irq_interference_latency}')
-                    self.__stdata[self.stcpu].setdefault("irq_interference", [])
-                    self.__stdata[self.stcpu]["irq_interference"] += [(irq_interference_name, irq_interference_latency)]
-                elif line.startswith("Max timerlat IRQ latency"):
-                    self._log(Log.DEBUG, f"line={line}")
-                    max_timerlat_irq_latency = fields[-5]
-                    self._log(Log.DEBUG, f"max_timerlat_irq_latency = {max_timerlat_irq_latency}")
+
+                # work around rtla not printing ':' after all names
+                if line.startswith('Softirq interference'):
+                    name = 'Softirq_interference'
+                elif line.startswith('IRQ interference'):
+                    name = 'IRQ_interference'
+                else:
+                    name = ''.join(line.split(':')[0]).replace(' ', '_')
+                self._log(Log.DEBUG, f"name={name}")
+
+                if name in ['Thread_latency']:
+                    latency = fields[-3]
+                    percent = fields[-1].strip('()%')
+                    self._log(Log.DEBUG, f'{name} = ({latency}, {percent})')
+                    self.__stdata[self.stcpu][name] = (latency, percent)
+                    continue
+                if name in ['Timerlat_IRQ_duration', 'IRQ_handler_delay', 'Blocking_thread', 'IRQ_interference', 'Softirq_interference']:
+                    latency = fields[-4]
+                    percent = fields[-2].strip('(')
+                    if name == 'IRQ_handler_delay' and fields[3] == '(exit':
+                        name = 'IRQ_handler_delay_exit_from_idle'
+                    self._log(Log.DEBUG, f'{name} = ({latency}, {percent})')
+                    self.__stdata[self.stcpu][name] = (latency, percent)
+                    detected = {'Blocking_thread' : (True, False, False),
+                                'IRQ_interference' : (False, True, False),
+                                'Softirq_interference' : (False, False, True) }
+                    if name in ('Blocking_thread', 'IRQ_interference', 'Softirq_interference'):
+                        blocking_thread_detected, irq_interference_detected, softirq_interference_detected = detected.get(name)
+                    continue
+                if name in ["IRQ_latency", "Previous_IRQ_interference"]:
+                    latency = fields[-2]
+                    self._log(Log.DEBUG, f'{name} = {fields[-2]}')
+                    self.__stdata[self.stcpu][name] = fields[-2]
+                    continue
+                if blocking_thread_detected or softirq_interference_detected or irq_interference_detected:
+                    if blocking_thread_detected:
+                        field_name = "blocking_thread"
+                    elif softirq_interference_detected:
+                        field_name = "softirq_interference"
+                    elif irq_interference_detected:
+                        field_name = "irq_interference"
+                    thread = " ".join(fields[0:-2])
+                    latency = fields[-2]
+                    self._log(Log.DEBUG, f"{field_name} += [({thread}, {latency})]")
+                    self.__stdata[self.stcpu].setdefault(field_name, [])
+                    self.__stdata[self.stcpu][field_name] += [(thread, latency)]
+                    continue
+                if name == "Max_timerlat_IRQ_latency_from_idle":
+                    latency = fields[-5]
                     max_timerlat_cpu = int(fields[-1])
-                    self._log(Log.DEBUG, f"max_timerlat_cpu = {max_timerlat_cpu}")
+                    self._log(Log.DEBUG, f'self.__stdata[{max_timerlat_cpu}][{name}] = {latency}')
                     self.__stdata.setdefault(max_timerlat_cpu, {})
-                    self.__stdata[max_timerlat_cpu]["Max_timerlat_IRQ_latency_from_idle"] = max_timerlat_irq_latency
+                    self.__stdata[max_timerlat_cpu][name] = latency
                 else:
                     self._log(Log.DEBUG, f'line = {line}')
                 continue
