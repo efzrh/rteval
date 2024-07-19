@@ -46,9 +46,6 @@ class RtEval(rtevalReport):
         if not isinstance(config, rtevalConfig.rtevalConfig):
             raise TypeError("config variable is not an rtevalConfig object")
 
-        if not isinstance(loadmods, LoadModules):
-            raise TypeError("loadmods variable is not a LoadModules object")
-
         if not isinstance(measuremods, MeasurementModules):
             raise TypeError("measuremods variable is not a MeasurementModules object")
 
@@ -111,20 +108,21 @@ class RtEval(rtevalReport):
         except Exception as err:
             raise RuntimeError(f"Cannot create report directory (NFS with rootsquash on?) [{err}]]")
 
+        params = {'workdir':self.__rtevcfg.workdir,
+                  'reportdir':self.__reportdir and self.__reportdir or "",
+                  'builddir':builddir,
+                  'srcdir':self.__rtevcfg.srcdir,
+                  'verbose': self.__rtevcfg.verbose,
+                  'debugging': self.__rtevcfg.debugging,
+                  'numcores':self._sysinfo.cpu_getCores(True),
+                  'logging':self.__rtevcfg.logging,
+                  'memsize':self._sysinfo.mem_get_size(),
+                  'numanodes':self._sysinfo.mem_get_numa_nodes(),
+                  'duration': float(self.__rtevcfg.duration),
+                  }
+
         if self._loadmods:
             self.__logger.log(Log.INFO, "Preparing load modules")
-            params = {'workdir':self.__rtevcfg.workdir,
-                      'reportdir':self.__reportdir and self.__reportdir or "",
-                      'builddir':builddir,
-                      'srcdir':self.__rtevcfg.srcdir,
-                      'verbose': self.__rtevcfg.verbose,
-                      'debugging': self.__rtevcfg.debugging,
-                      'numcores':self._sysinfo.cpu_getCores(True),
-                      'logging':self.__rtevcfg.logging,
-                      'memsize':self._sysinfo.mem_get_size(),
-                      'numanodes':self._sysinfo.mem_get_numa_nodes(),
-                      'duration': float(self.__rtevcfg.duration),
-                      }
             self._loadmods.Setup(params)
 
         self.__logger.log(Log.INFO, "Preparing measurement modules")
@@ -144,15 +142,18 @@ class RtEval(rtevalReport):
 
             print(f"rteval run on {os.uname()[2]} started at {time.asctime()}")
             onlinecpus = self._sysinfo.cpu_getCores(True)
-            cpulist = self._loadmods._cfg.GetSection("loads").cpulist
-            if cpulist:
-                print(f"started {self._loadmods.ModulesLoaded()} loads on cores {cpulist}", end=' ')
-            else:
-                print(f"started {self._loadmods.ModulesLoaded()} loads on {onlinecpus} cores", end=' ')
-            if self._sysinfo.mem_get_numa_nodes() > 1:
-                print(f" with {self._sysinfo.mem_get_numa_nodes()} numa nodes")
-            else:
-                print("")
+            if self._loadmods:
+                cpulist = self._loadmods._cfg.GetSection("loads").cpulist
+                if cpulist:
+                    print(f"started {self._loadmods.ModulesLoaded()} loads on cores {cpulist}",
+                          end=' ')
+                else:
+                    print(f"started {self._loadmods.ModulesLoaded()} loads on {onlinecpus} cores",
+                          end=' ')
+                if self._sysinfo.mem_get_numa_nodes() > 1:
+                    print(f" with {self._sysinfo.mem_get_numa_nodes()} numa nodes")
+                else:
+                    print("")
             cpulist = self._measuremods._cfg.GetSection("measurement").cpulist
             if cpulist:
                 print(f"started measurement threads on cores {cpulist}")
@@ -192,7 +193,7 @@ class RtEval(rtevalReport):
                     if threading.active_count() < nthreads:
                         raise RuntimeError("load thread died!")
 
-                if not load_avg_checked:
+                if self._loadmods and not load_avg_checked:
                     self._loadmods.SaveLoadAvg()
                     load_avg_checked = 5
                 else:
@@ -202,7 +203,8 @@ class RtEval(rtevalReport):
                     left_to_run = stoptime - currtime
                     self.__show_remaining_time(left_to_run)
                     rpttime = currtime + report_interval
-                    print(f"load average: {self._loadmods.GetLoadAvg():.2f}")
+                    if self._loadmods:
+                        print(f"load average: {self._loadmods.GetLoadAvg():.2f}")
                 currtime = time.time()
 
             self.__logger.log(Log.DEBUG, "out of measurement loop")

@@ -146,6 +146,9 @@ def parse_options(cfg, parser, cmdargs):
     parser.add_argument("-S", "--source-download", nargs="*", dest="rteval___srcdownload",
                         type=str, default=None, metavar="KERNEL_VERSION",
                         help='download a source kernel from kernel.org and exit')
+    parser.add_argument("--noload", dest="rteval___noload",
+                        action="store_true", default=False,
+                        help="only run the measurements (don't run loads)")
 
 
     if not cmdargs:
@@ -272,6 +275,12 @@ if __name__ == '__main__':
         loadmods.SetupModuleOptions(parser)
         measuremods.SetupModuleOptions(parser)
         cmd_args = parse_options(config, parser, sys.argv[1:])
+
+        if rtevcfg.noload:
+            if rtevcfg.onlyload:
+                # Make up your mind!
+                raise RuntimeError('The --noload and --onlyload options are incompatible.')
+            loadmods = None
 
         # download kernel tarball
         if rtevcfg.srcdownload:

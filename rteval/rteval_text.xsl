@@ -15,7 +15,14 @@
     <xsl:text>&#10;</xsl:text>
 
     <xsl:text>   Loads:        </xsl:text>
-    <xsl:value-of select="loads/@loads"/><xsl:text> loads run on cores </xsl:text><xsl:value-of select="loads/@loadcpus"/>
+    <xsl:choose>
+      <xsl:when test="loads">
+        <xsl:value-of select="loads/@loads"/><xsl:text> loads run on cores </xsl:text><xsl:value-of select="loads/@loadcpus"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:text>none</xsl:text>
+      </xsl:otherwise>
+    </xsl:choose>
     <xsl:text>&#10;</xsl:text>
 
     <xsl:text>   Measurement:  </xsl:text>

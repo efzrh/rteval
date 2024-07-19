@@ -57,7 +57,8 @@ class rtevalReport:
         self.__xmlreport.AppendXMLnodes(self._sysinfo.MakeReport())
 
         # Add load info
-        self.__xmlreport.AppendXMLnodes(self._loadmods.MakeReport())
+        if self._loadmods:
+            self.__xmlreport.AppendXMLnodes(self._loadmods.MakeReport())
 
         # Add measurement data
         self.__xmlreport.AppendXMLnodes(self._measuremods.MakeReport())
