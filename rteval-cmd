@@ -247,11 +247,10 @@ if __name__ == '__main__':
                 'hackbench'  : 'module',
                 'stressng'   : 'module'})
 
-            if not config.HasSection('measurement'):
-                config.AppendConfig('measurement', {
-                    'cyclictest' : 'module',
-                    'timerlat' : 'module',
-                    'sysstat' : 'module'})
+        if not config.HasSection('measurement'):
+            config.AppendConfig('measurement', {
+                'cyclictest' : 'module',
+                'sysstat' : 'module'})
 
         # Prepare log levels before loading modules, not to have unwanted log messages
         rtevcfg = config.GetSection('rteval')
