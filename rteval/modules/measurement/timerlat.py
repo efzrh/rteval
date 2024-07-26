@@ -216,7 +216,7 @@ class Timerlat(rtevalModulePrototype):
                                                   logfnc=self._log)
         self.__timerlatdata['system'].description = (f"({self.__numcores} cores) ") + info['0']['model name']
         self._log(Log.DEBUG, f"system using {self.__numcores} cpu cores")
-        self.set_latency()
+        self.set_latency_test()
 
 
     def _WorkloadSetup(self):

@@ -216,7 +216,7 @@ class Cyclictest(rtevalModulePrototype):
         self.__started = False
         self.__cyclicoutput = None
         self.__breaktraceval = None
-        self.set_latency()
+        self.set_latency_test()
 
 
     @staticmethod
