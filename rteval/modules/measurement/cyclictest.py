@@ -251,6 +251,9 @@ class Cyclictest(rtevalModulePrototype):
         self.__cmd.append(f'-t{self.__numcores}')
         self.__cmd.append(f'-a{self.__cpulist}')
 
+        if (self.__cfg.usingCpupower):
+            self.__cmd.append('--default-system')
+
         if 'threads' in self.__cfg and self.__cfg.threads:
             self.__cmd.append(f"-t{int(self.__cfg.threads)}")
 

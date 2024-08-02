@@ -119,6 +119,7 @@ class RtEval(rtevalReport):
                   'memsize':self._sysinfo.mem_get_size(),
                   'numanodes':self._sysinfo.mem_get_numa_nodes(),
                   'duration': float(self.__rtevcfg.duration),
+                  'usingCpupower': self.__rtevcfg.usingCpupower
                   }
 
         if self._loadmods:
