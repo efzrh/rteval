@@ -38,6 +38,8 @@ class MeasurementModules(RtEvalModules):
                               default=self._cfg.GetSection("measurement").setdefault("run-on-isolcpus", "false").lower()
                                       == "true",
                               help="Include isolated CPUs in default cpulist")
+        grparser.add_argument('--idle-set', dest='measurement___idlestate', metavar='IDLESTATE',
+                        default=None, help='Idle state depth to set on cpus running measurement modules')
 
 
     def Setup(self, modparams):

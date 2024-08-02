@@ -282,7 +282,7 @@ reference from the first import"""
         grparser.add_argument(f'--{self.__modtype}-cpulist',
                             dest=f'{self.__modtype}___cpulist', action='store', default="",
                             help=f'CPU list where {self.__modtype} modules will run',
-                            metavar='LIST')
+                            metavar='CPULIST')
 
         for (modname, mod) in list(self.__modsloaded.items()):
             opts = mod.ModuleParameters()

@@ -29,6 +29,7 @@ from rteval.Log import Log
 from rteval import RtEval, rtevalConfig
 from rteval.modules.loads import LoadModules
 from rteval.modules.measurement import MeasurementModules
+from rteval import cpupower
 from rteval.version import RTEVAL_VERSION
 from rteval.systopology import SysTopology, parse_cpulist_from_config
 from rteval.modules.loads.kcompile import ModuleParameters
@@ -402,6 +403,10 @@ if __name__ == '__main__':
         if not os.path.isdir(rtevcfg.workdir):
             raise RuntimeError(f"work directory {rtevcfg.workdir} does not exist")
 
+        # if idle-set has been specified, enable the idle state via cpupower
+        if msrcfg.idlestate:
+            cpupower_controller = cpupower.Cpupower(msrcfg.cpulist, msrcfg.idlestate, logger=logger)
+            cpupower_controller.enable_idle_state()
 
         rteval = RtEval(config, loadmods, measuremods, logger)
         rteval.Prepare(rtevcfg.onlyload)
@@ -420,6 +425,10 @@ if __name__ == '__main__':
             # ... otherwise, run the full measurement suite with loads
             ec = rteval.Measure()
             logger.log(Log.DEBUG, f"exiting with exit code: {ec}")
+
+        # restore previous idle state settings
+        if msrcfg.idlestate:
+            cpupower_controller.restore_idle_states()
 
         sys.exit(ec)
     except KeyboardInterrupt:
