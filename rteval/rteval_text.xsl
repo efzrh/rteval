@@ -143,6 +143,22 @@
       </xsl:when>
       <xsl:otherwise>(unknown)</xsl:otherwise>
     </xsl:choose>
+    <xsl:text>&#10;</xsl:text>
+
+    <xsl:text>   Tuned state:  </xsl:text>
+    <xsl:choose>
+      <xsl:when test="SystemInfo/Tuned/@present='1'">
+        <xsl:value-of select="SystemInfo/Tuned/active_profile"/>
+        <xsl:text> profile</xsl:text>
+          <xsl:if test="SystemInfo/Tuned/active_profile != 'unknown'">
+            <xsl:text>, verification: </xsl:text>
+            <xsl:value-of select="SystemInfo/Tuned/verified"/>
+          </xsl:if>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:text>not present</xsl:text>
+        </xsl:otherwise>
+    </xsl:choose>
     <xsl:text>&#10;&#10;</xsl:text>
    
     <xsl:text>   System load:&#10;</xsl:text>
