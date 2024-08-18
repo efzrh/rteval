@@ -1,7 +1,7 @@
 # Use CentOS Stream 9 as base image
 FROM centos:stream9
 
-ARG KERNEL_VERSION=linux-6.6.1.tar.xz
+ARG KERNEL_VERSION=linux-6.10.5.tar.xz
 
 
 # Copy current directory to /opt/rteval/

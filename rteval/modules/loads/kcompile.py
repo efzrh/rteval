@@ -21,7 +21,7 @@ expand_cpulist = cpulist_utils.expand_cpulist
 compress_cpulist = cpulist_utils.compress_cpulist
 nonisolated_cpulist = cpulist_utils.nonisolated_cpulist
 
-DEFAULT_KERNEL_PREFIX = "linux-6.6"
+DEFAULT_KERNEL_PREFIX = "linux-6.10.5"
 
 class KBuildJob:
     '''Class to manage a build job bound to a particular node'''
@@ -334,7 +334,7 @@ class Kcompile(CommandLineLoad):
 
 def ModuleParameters():
     return {"source":   {"descr": "Source tar ball",
-                         "default": "linux-6.6.1.tar.xz",
+                         "default": "linux-6.10.5.tar.xz",
                          "metavar": "TARBALL"},
             "jobspercore": {"descr": "Number of working threads per core",
                             "default": 2,
