@@ -280,9 +280,23 @@ reference from the first import"""
 
         grparser = parser.add_argument_group(f"Group Options for {self.__modtype} modules")
         grparser.add_argument(f'--{self.__modtype}-cpulist',
-                            dest=f'{self.__modtype}___cpulist', action='store', default="",
+                            dest=f'{self.__modtype}___cpulist', action='store',
+                            default="",
                             help=f'CPU list where {self.__modtype} modules will run',
                             metavar='CPULIST')
+
+        # Set up options for measurement modules only
+        if self.__modtype == 'measurement':
+            grparser.add_argument(f'--{self.__modtype}-run-on-isolcpus',
+                                  dest = f'{self.__modtype}___run_on_isolcpus',
+                                  action = "store_true",
+                                  default = config.GetSection("measurement").setdefault("run-on-isolcpus", "false").lower() == "true",
+                                  help = "Include isolated CPUs in default cpulist")
+            grparser.add_argument('--idle-set',
+                                  dest='measurement___idlestate',
+                                  metavar='IDLESTATE',
+                                  default=None,
+                                  help='Idle state depth to set on cpus running measurement modules')
 
         for (modname, mod) in list(self.__modsloaded.items()):
             opts = mod.ModuleParameters()
@@ -296,7 +310,7 @@ reference from the first import"""
                 # Ignore if a section is not found
                 cfg = None
 
-            modgrparser = parser.add_argument_group(f"Options for the {shortmod} module")
+            grparser = parser.add_argument_group(f"Options for the {shortmod} module")
             for (o, s) in list(opts.items()):
                 descr = 'descr' in s and s['descr'] or ""
                 metavar = 'metavar' in s and s['metavar'] or None
@@ -311,15 +325,13 @@ reference from the first import"""
                     default = 'default' in s and s['default'] or None
 
 
-                modgrparser.add_argument(f'--{shortmod}-{o}',
+                grparser.add_argument(f'--{shortmod}-{o}',
                                          dest=f"{shortmod}___{o}",
                                          action='store',
                                          help='%s%s' % (descr,
                                                         default and ' (default: %s)' % default or ''),
                                          default=default,
                                          metavar=metavar)
-
-            return grparser
 
 
     def InstantiateModule(self, modname, modcfg, modroot=None):

@@ -29,17 +29,7 @@ class MeasurementModules(RtEvalModules):
 
     def SetupModuleOptions(self, parser):
         "Sets up all the measurement modules' parameters for the option parser"
-        grparser = super().SetupModuleOptions(parser)
-
-        # Set up options specific for measurement module group
-        grparser.add_argument("--measurement-run-on-isolcpus",
-                              dest="measurement___run_on_isolcpus",
-                              action="store_true",
-                              default=self._cfg.GetSection("measurement").setdefault("run-on-isolcpus", "false").lower()
-                                      == "true",
-                              help="Include isolated CPUs in default cpulist")
-        grparser.add_argument('--idle-set', dest='measurement___idlestate', metavar='IDLESTATE',
-                        default=None, help='Idle state depth to set on cpus running measurement modules')
+        super().SetupModuleOptions(parser)
 
 
     def Setup(self, modparams):
