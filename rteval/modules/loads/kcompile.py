@@ -122,6 +122,8 @@ class Kcompile(CommandLineLoad):
         self.cpulist = config.cpulist
         CommandLineLoad.__init__(self, "kcompile", config, logger)
         self.logger = logger
+        self._kernel_prefix = ""
+        self._log(Log.DEBUG, f'self._cfg.source = {self._cfg.source}')
 
     def _extract_tarball(self):
         if self.source is None:
@@ -152,22 +154,29 @@ class Kcompile(CommandLineLoad):
                 f"error removing builddir ({self.builddir}) (ret={ret})")
 
     def _find_tarball(self):
-       # If the user specifies the full kernel name, check if available
+        """ Find the tarball and self._kernel_prefix """
+
+        if 'rc' in self._cfg.source:
+            tarfile_prefix = re.search(r"\d{1,2}\.\d{1,3}\-rc\d{1,2}", self._cfg.source).group(0)
+        elif 'rteval' in self._cfg.source:
+            tarfile_prefix = re.search(r"(\d{1,2}\.\d{1,3}\.\d{1,3}\-rteval)|(\d{1,2}\.\d{1,3}\-rteval)", self._cfg.source).group(0)
+        else:
+            tarfile_prefix = re.search(r"(\d{1,2}\.\d{1,3}\.\d{1,3})|(\d{1,2}\.\d{1,3})", self._cfg.source).group(0)
+
+        # Save the kernel prefix
+        self._kernel_prefix = "linux-" + tarfile_prefix
+
+        # If the user specifies the full kernel name, check if available
         tarfile = os.path.join(self.srcdir, self._cfg.source)
         if os.path.exists(tarfile):
             return tarfile
-
-        if 'rc' in self._cfg.source:
-            tarfile_prefix = re.search(r"\d{1,2}\.\d{1,3}\-[a-z]*\d{1,2}", self._cfg.source).group(0)
-        else:
-            tarfile_prefix = re.search(r"(\d{1,2}\.\d{1,3}\.\d{1,3})|(\d{1,2}\.\d{1,3})", self._cfg.source).group(0)
 
         # either a tar.xz or tar.gz might exist. Check for both.
         xz_file = os.path.join(self.srcdir,"linux-" + tarfile_prefix + ".tar.xz" )
         gz_file = os.path.join(self.srcdir,"linux-" + tarfile_prefix + ".tar.gz" )
         if os.path.exists(xz_file):
             return xz_file
-        elif os.path.exists(gz_file):
+        if os.path.exists(gz_file):
             return gz_file
         raise rtevalRuntimeError(self, f"tarfile {tarfile} does not exist!")
 
@@ -178,21 +187,20 @@ class Kcompile(CommandLineLoad):
         # find our source tarball
         if self._cfg.source:
             self.source = self._find_tarball()
-            kernel_prefix = re.search(r"(linux-\d{1,2}\.\d{1,3}\.\d{1,3})|(linux-\d{1,2}\.\d{1,3})", self.source).group(0)
         else:
             tarfiles = glob.glob(os.path.join(self.srcdir, f"{DEFAULT_KERNEL_PREFIX}*"))
             if tarfiles:
                 self.source = tarfiles[0]
             else:
                 raise rtevalRuntimeError(self, f" no kernel tarballs found in {self.srcdir}")
-            kernel_prefix = DEFAULT_KERNEL_PREFIX
-        self._log(Log.DEBUG, f"kernel_prefix = {kernel_prefix}")
+            self._kernel_prefix = DEFAULT_KERNEL_PREFIX
+        self._log(Log.DEBUG, f"self._kernel_prefix = {self._kernel_prefix}")
 
         # check for existing directory
         kdir = None
         names = os.listdir(self.builddir)
         for d in names:
-            if d.startswith(kernel_prefix):
+            if d == self._kernel_prefix:
                 kdir = d
                 break
         if kdir is None:
@@ -200,7 +208,7 @@ class Kcompile(CommandLineLoad):
             names = os.listdir(self.builddir)
             for d in names:
                 self._log(Log.DEBUG, f"checking {d}")
-                if d.startswith(kernel_prefix):
+                if d == self._kernel_prefix:
                     kdir = d
                     break
         if kdir is None:
